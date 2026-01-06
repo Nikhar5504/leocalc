@@ -228,3 +228,51 @@ label {
   transform: translateY(-2px);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
+
+/* Freight Layout - Desktop Default */
+.freight-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+/* Mobile & Responsive Overrides */
+@media (max-width: 768px) {
+  .app-container {
+    padding: 0 !important;
+  }
+
+  main {
+    padding: 1rem !important;
+  }
+
+  .freight-layout {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .results-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .card {
+    padding: 1rem !important;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    box-shadow: none;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .card:first-child {
+    border-top: none;
+  }
+}

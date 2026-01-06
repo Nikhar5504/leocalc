@@ -162,126 +162,6 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
     const fCharge = parseFloat(freightCharge) || 0;
     const freightPerPiece = totalPieces > 0 ? fCharge / totalPieces : 0;
 
-    // --- Unit Helper ---
-    // We need to convert FROM local unit TO main unit
-    const convertValue = (val, fromUnit, toUnit) => {
-        const v = parseFloat(val);
-        if (isNaN(v)) return 0;
-        if (fromUnit === toUnit) return v;
-
-        // Base unit is cm? Or we just convert ratios.
-        // Let's standardise everything to meters first, then to target.
-        // Factors to Meters
-        const toMeters = {
-            'm': 1,
-            'ft': 0.3048,
-            'cm': 0.01,
-            'in': 0.0254,
-            'mm': 0.001
-        };
-
-        const valInMeters = v * toMeters[fromUnit];
-        const valInTarget = valInMeters / toMeters[toUnit];
-        return parseFloat(valInTarget.toFixed(4)); // Avoid weird float rounding
-    };
-
-    // --- Smart Input Component ---
-    const DimensionInput = ({ label, name, value, mainUnit, onChange }) => {
-        const [localUnit, setLocalUnit] = React.useState(mainUnit);
-        const [localValue, setLocalValue] = React.useState('');
-
-        // 1. Sync Local Unit if Global Unit changes (Reset behavior)
-        React.useEffect(() => {
-            setLocalUnit(mainUnit);
-        }, [mainUnit]);
-
-        // 2. Sync Local Value from Parent (Physical Constancy)
-        // We convert the incoming parent value (in mainUnit) to our current localUnit
-        React.useEffect(() => {
-            const converted = convertValue(value, mainUnit, localUnit);
-            // Prevent loop if difference is negligible (floating point safety)
-            // But for simple inputs, direct set is usually fine if we don't round too aggressively in convertValue
-            // Let's use a formatted string to avoid cursor jumps if possible, 
-            // but dealing with "user typing 1.0" vs "1" is tricky.
-            // Simpler: Just update. If checking `document.activeElement` is needed we can add it.
-            // For now, let's assume the Parent -> Child flow is dominant.
-            // Issue: If I type "1", parent gets "0.01", parent sends back "0.01", we convert to "1".
-            // If I type "1.", parent gets "0.01", parent sends back "0.01", we convert to "1". DOT IS LOST.
-            // FIX: Only update localValue from props if the prop value is *different* from what our current localValue implies.
-
-            const currentImplied = convertValue(localValue, localUnit, mainUnit);
-            const incoming = parseFloat(value) || 0;
-            const implied = parseFloat(currentImplied) || 0;
-
-            // Tolerance for float comparison
-            if (Math.abs(incoming - implied) > 0.0001) {
-                setLocalValue(converted);
-            }
-        }, [value, mainUnit, localUnit]);
-
-        const handleChange = (e) => {
-            const newVal = e.target.value;
-            setLocalValue(newVal);
-
-            // Real-time update to parent
-            if (newVal === '' || isNaN(parseFloat(newVal))) {
-                onChange({ target: { name, value: 0 } });
-                return;
-            }
-
-            const converted = convertValue(newVal, localUnit, mainUnit);
-            onChange({ target: { name, value: converted } });
-        };
-
-        const handleUnitChange = (e) => {
-            const newUnit = e.target.value;
-            setLocalUnit(newUnit);
-            // When unit changes, we want to keep the PHYSICAL size, so we update the number.
-            // Current value in Main Unit is `value`.
-            // New Display Value = convert `value` (Main) -> `newUnit`
-            // We rely on the useEffect [value, mainUnit, localUnit] to trigger?
-            // Yes, because we changed `localUnit`, the effect will fire, re-convert proper value to new unit.
-        };
-
-        return (
-            <div className="form-group">
-                <label style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.05em', color: '#94a3b8' }}>{label.toUpperCase()}</label>
-                <div className="input-wrapper" style={{ display: 'flex', gap: '0' }}>
-                    <input
-                        type="number"
-                        name={name}
-                        value={localValue}
-                        onChange={handleChange}
-                        onWheel={(e) => e.target.blur()} // Prevent accidentally scrolling numbers
-                        className="inputField"
-                        style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0, borderRight: 'none', flex: 1 }}
-                    />
-                    <select
-                        value={localUnit}
-                        onChange={handleUnitChange}
-                        style={{
-                            width: '4.5rem',
-                            padding: '0 0.2rem',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            borderTopLeftRadius: 0,
-                            borderBottomLeftRadius: 0,
-                            borderColor: '#e2e8f0',
-                            backgroundColor: localUnit !== mainUnit ? '#fef3c7' : '#f8fafc',
-                            color: localUnit !== mainUnit ? '#d97706' : '#64748b'
-                        }}
-                    >
-                        <option value="m">m</option>
-                        <option value="ft">ft</option>
-                        <option value="in">in</option>
-                        <option value="cm">cm</option>
-                        <option value="mm">mm</option>
-                    </select>
-                </div>
-            </div>
-        );
-    };
-
     const renderStandardInput = (label, name, suffix, props = {}) => (
         <div className="form-group">
             <label style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.05em', color: '#94a3b8' }}>{label.toUpperCase()}</label>
@@ -310,7 +190,7 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
     );
 
     return (
-        <div className="freight-layout" style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 1fr', gap: '2rem', alignItems: 'start' }}>
+        <div className="freight-layout">
             {/* Left: Inputs Section */}
             <div className="card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
