@@ -27,7 +27,7 @@ function Container({ width, height, depth, displayData }) {
                     roughness={0.1}
                     metalness={0.1}
                 />
-                <Edges color="#000000" threshold={15} lineWidth={3} />
+                <Edges color="#000000" threshold={15} lineWidth={1} />
             </Box>
 
             {/* Labels Removed by User Request */}
@@ -55,11 +55,6 @@ function Bales({ limit, bWidth, bHeight, bDepth, vWidth, vHeight, vDepth, displa
 
         let count = 0;
         // Fill until we hit the 'limit' (effectiveBales)
-        // We fill Y first (stack up), then X, then Z usually? Or fill floor first (X, Z) then up (Y)?
-        // Let's fill floor layer first: X then Z, then stack Y.
-        // Actually standard loop order:
-        // Vertical Stacking: Fill Y (Height) first to minimize floor footprint (Partial Loads)
-        // Outer loops: Floor grid (X, Z). Inner loop: Height (Y).
         for (let x = 0; x < nx; x++) {
             for (let z = 0; z < nz; z++) {
                 for (let y = 0; y < ny; y++) {
@@ -79,13 +74,10 @@ function Bales({ limit, bWidth, bHeight, bDepth, vWidth, vHeight, vDepth, displa
         return arr;
     }, [limit, bWidth, bHeight, bDepth, vWidth, vHeight, vDepth]);
 
-    // High count optimization: render simplified volume if insane number
+    // High count optimization
     if (limit > 3000) {
-        // Just render a box for now as placeholder for perf
-        // or just cap it.
         return (
             <group>
-                {/* Optimization: Render slightly fewer or blocks if needed, but for now just capped loop above works */}
             </group>
         );
     }
@@ -94,9 +86,14 @@ function Bales({ limit, bWidth, bHeight, bDepth, vWidth, vHeight, vDepth, displa
         <group>
             {bales.map((b, i) => (
                 <Box key={i} args={[bWidth, bHeight, bDepth]} position={b.pos}>
-                    <meshStandardMaterial color="#ffffff" roughness={0.4} />
-                    <Edges color="#000000" threshold={15} lineWidth={0.5} />
-                    {/* Labels Removed by User Request */}
+                    <meshStandardMaterial 
+                        color="#f8fafc" 
+                        roughness={0.8} 
+                        metalness={0.1}
+                        emissive="#ffffff"
+                        emissiveIntensity={0.05}
+                    />
+                    <Edges color="#475569" threshold={15} lineWidth={0.8} />
                 </Box>
             ))}
         </group>
@@ -105,7 +102,6 @@ function Bales({ limit, bWidth, bHeight, bDepth, vWidth, vHeight, vDepth, displa
 
 export default function BaleVisualizer({ vehicleDims, baleDims, effectiveCount, displayData }) {
     // effectiveCount comes in as the limit. 
-    // If it's undefined/null, we might want a fallback, but logic handles it.
 
     const maxDim = Math.max(vehicleDims.l, vehicleDims.w, vehicleDims.h) || 1;
     const scale = 8 / maxDim;
@@ -119,14 +115,14 @@ export default function BaleVisualizer({ vehicleDims, baleDims, effectiveCount, 
     const bD = baleDims.w * scale;
 
     return (
-        <Canvas camera={{ position: [12, 12, 12], fov: 45 }}>
+        <Canvas camera={{ position: [9, 9, 9], fov: 45 }}>
             <color attach="background" args={['#f1f5f9']} />
             <ambientLight intensity={0.7} />
             <directionalLight position={[10, 20, 10]} intensity={1} castShadow />
             <directionalLight position={[-10, 10, -10]} intensity={0.5} />
 
             {/* Auto Rotate Disabled */}
-            <OrbitControls autoRotate={false} dampeningFactor={0.1} />
+            <OrbitControls autoRotate={false} dampingFactor={0.1} />
 
             <group position={[0, -vH / 4, 0]}>
                 <Container width={vW} height={vH} depth={vD} displayData={displayData} />
