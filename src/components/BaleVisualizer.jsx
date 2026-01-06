@@ -35,6 +35,40 @@ function Container({ width, height, depth, displayData }) {
     );
 }
 
+const BaleNumber = ({ index, width, height, depth }) => {
+    // Dynamic font size based on smallest dimension
+    const fontSize = Math.min(width, height, depth) * 0.4;
+    const color = "black";
+    const offset = 0.01; // Slight offset to prevent z-fighting
+
+    const sides = [
+        { pos: [0, 0, depth / 2 + offset], rot: [0, 0, 0] }, // Front
+        { pos: [0, 0, -depth / 2 - offset], rot: [0, Math.PI, 0] }, // Back
+        { pos: [width / 2 + offset, 0, 0], rot: [0, Math.PI / 2, 0] }, // Right
+        { pos: [-width / 2 - offset, 0, 0], rot: [0, -Math.PI / 2, 0] }, // Left
+        { pos: [0, height / 2 + offset, 0], rot: [-Math.PI / 2, 0, 0] }, // Top
+        { pos: [0, -height / 2 - offset, 0], rot: [Math.PI / 2, 0, 0] }, // Bottom
+    ];
+
+    return (
+        <group>
+            {sides.map((s, idx) => (
+                <Text
+                    key={idx}
+                    position={s.pos}
+                    rotation={s.rot}
+                    fontSize={fontSize}
+                    color={color}
+                    anchorX="center"
+                    anchorY="middle"
+                >
+                    {index}
+                </Text>
+            ))}
+        </group>
+    );
+};
+
 function Bales({ limit, bWidth, bHeight, bDepth, vWidth, vHeight, vDepth, displayData }) {
     const { unit, bL, bW, bH } = displayData || {};
     const bales = useMemo(() => {
@@ -93,11 +127,15 @@ function Bales({ limit, bWidth, bHeight, bDepth, vWidth, vHeight, vDepth, displa
     return (
         <group>
             {bales.map((b, i) => (
-                <Box key={i} args={[bWidth, bHeight, bDepth]} position={b.pos}>
-                    <meshStandardMaterial color="#ffffff" roughness={0.4} />
-                    <Edges color="#000000" threshold={15} lineWidth={1.5} />
-                    {/* Labels Removed by User Request */}
-                </Box>
+                <group key={i} position={b.pos}>
+                    <Box args={[bWidth, bHeight, bDepth]}>
+                        <meshStandardMaterial color="#ffffff" roughness={0.4} />
+                        <Edges color="#000000" threshold={15} lineWidth={0.5} />
+                    </Box>
+
+                    {/* Numbering on 6 sides */}
+                    <BaleNumber index={i + 1} width={bWidth} height={bHeight} depth={bDepth} />
+                </group>
             ))}
         </group>
     );
