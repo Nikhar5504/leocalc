@@ -130,7 +130,7 @@ function Bales({ limit, bWidth, bHeight, bDepth, vWidth, vHeight, vDepth, displa
                 <group key={i} position={b.pos}>
                     <Box args={[bWidth, bHeight, bDepth]}>
                         <meshStandardMaterial color="#ffffff" roughness={0.4} />
-                        <Edges color="#000000" threshold={15} lineWidth={0.5} />
+                        <Edges color="#000000" threshold={15} lineWidth={1.5} />
                     </Box>
 
                     {/* Numbering on 6 sides */}
