@@ -49,8 +49,8 @@ export default function PricingCalculator({ inputs, onChange }) {
 
     return (
         <div className="pricing-page">
-            <div className="card" style={{ marginBottom: '2rem', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                <h3 style={{ fontSize: '0.9rem', color: '#334155', fontWeight: 700, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div className="card" style={{ marginBottom: '1rem', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                <h3 style={{ fontSize: '0.8rem', color: '#334155', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', textTransform: 'uppercase' }}>
                     <CalculatorIcon /> Calculator Inputs
                 </h3>
                 <div className="form-grid">
@@ -66,37 +66,37 @@ export default function PricingCalculator({ inputs, onChange }) {
                 {/* Card 1: Vendor Cost (Blue/Indigo) */}
                 <div className="result-card" style={{ background: '#4f46e5', minColors: 'white' }}>
                     <div style={{ flex: 1 }}>
-                        <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', display: 'block', marginBottom: '0.25rem' }}>
+                        <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', display: 'block', marginBottom: '0.2rem' }}>
                             Vendor Cost
                         </label>
-                        <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.9)', marginBottom: '0.25rem' }}>Effective Vendor Cost</div>
-                        <div className="value" style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.02em' }}>{formatCurrency(effectiveVendorCost)}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.9)', marginBottom: '0.2rem' }}>Effective Vendor Cost</div>
+                        <div className="value" style={{ fontSize: '1.75rem', fontWeight: 700, letterSpacing: '-0.02em' }}>{formatCurrency(effectiveVendorCost)}</div>
                     </div>
 
-                    <div style={{ marginTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '0.75rem' }}>
-                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', marginBottom: '0.1rem' }}>Adj. Conversion</div>
-                        <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{formatRate(adjustedConversion)} <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>/kg</span></div>
+                    <div style={{ marginTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '0.5rem' }}>
+                        <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.7)', marginBottom: '0.1rem' }}>Adj. Conversion</div>
+                        <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>{formatRate(adjustedConversion)} <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>/kg</span></div>
                     </div>
                 </div>
 
                 {/* Card 2: Customer Pricing (Green/Emerald) */}
                 <div className="result-card" style={{ background: '#059669' }}>
                     <div style={{ flex: 1 }}>
-                        <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', display: 'block', marginBottom: '0.25rem' }}>
+                        <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', display: 'block', marginBottom: '0.2rem' }}>
                             Customer Pricing
                         </label>
-                        <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.9)', marginBottom: '0.25rem' }}>Bag Price (Total)</div>
-                        <div className="value" style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.02em' }}>{formatCurrency(bagPrice)}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.9)', marginBottom: '0.2rem' }}>Bag Price (Total)</div>
+                        <div className="value" style={{ fontSize: '1.75rem', fontWeight: 700, letterSpacing: '-0.02em' }}>{formatCurrency(bagPrice)}</div>
                     </div>
 
-                    <div style={{ marginTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
+                    <div style={{ marginTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
                         <div>
-                            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', marginBottom: '0.1rem' }}>Conversion Cost</div>
-                            <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{formatRate(customerConversionPerKg)} <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>/kg</span></div>
+                            <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.7)', marginBottom: '0.1rem' }}>Conversion Cost</div>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>{formatRate(customerConversionPerKg)} <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>/kg</span></div>
                         </div>
                         <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', marginBottom: '0.1rem' }}>Customer Price / kg</div>
-                            <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{formatNum(customerPricePerKg)}</div>
+                            <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.7)', marginBottom: '0.1rem' }}>Customer Price / kg</div>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>{formatNum(customerPricePerKg)}</div>
                         </div>
                     </div>
                 </div>
@@ -104,17 +104,17 @@ export default function PricingCalculator({ inputs, onChange }) {
                 {/* Card 3: Profit (Purple) */}
                 <div className="result-card" style={{ background: '#9333ea' }}>
                     <div style={{ flex: 1 }}>
-                        <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', display: 'block', marginBottom: '0.25rem' }}>
+                        <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', display: 'block', marginBottom: '0.2rem' }}>
                             Profit & Comparison
                         </label>
-                        <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.9)', marginBottom: '0.25rem' }}>Net Profit</div>
-                        <div className="value" style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.02em' }}>{formatCurrency(netProfit)}</div>
-                        <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.8)' }}>({formatNum(calculatedProfitPercent)}%)</div>
+                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.9)', marginBottom: '0.2rem' }}>Net Profit</div>
+                        <div className="value" style={{ fontSize: '1.75rem', fontWeight: 700, letterSpacing: '-0.02em' }}>{formatCurrency(netProfit)}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.8)' }}>({formatNum(calculatedProfitPercent)}%)</div>
                     </div>
 
-                    <div style={{ marginTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '0.75rem' }}>
-                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', marginBottom: '0.1rem' }}>Conversion Diff / kg</div>
-                        <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{formatRate(conversionDiff)} <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>/kg</span></div>
+                    <div style={{ marginTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '0.5rem' }}>
+                        <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.7)', marginBottom: '0.1rem' }}>Conversion Diff / kg</div>
+                        <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>{formatRate(conversionDiff)} <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>/kg</span></div>
                     </div>
                 </div>
             </div>
