@@ -77,46 +77,59 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
     // --- Smart Input Component ---
     const DimensionInput = ({ label, name, value, mainUnit, onChange }) => {
         const [localUnit, setLocalUnit] = React.useState(mainUnit);
-        const [localValue, setLocalValue] = React.useState(value);
+        const [localValue, setLocalValue] = React.useState('');
 
-        // Sync local value when external value OR mainUnit changes (and we aren't editing ideally, 
-        // but for now let's just sync if localUnit matches mainUnit)
+        // 1. Sync Local Unit if Global Unit changes (Reset behavior)
         React.useEffect(() => {
-            if (localUnit === mainUnit) {
-                setLocalValue(value);
+            setLocalUnit(mainUnit);
+        }, [mainUnit]);
+
+        // 2. Sync Local Value from Parent (Physical Constancy)
+        // We convert the incoming parent value (in mainUnit) to our current localUnit
+        React.useEffect(() => {
+            const converted = convertValue(value, mainUnit, localUnit);
+            // Prevent loop if difference is negligible (floating point safety)
+            // But for simple inputs, direct set is usually fine if we don't round too aggressively in convertValue
+            // Let's use a formatted string to avoid cursor jumps if possible, 
+            // but dealing with "user typing 1.0" vs "1" is tricky.
+            // Simpler: Just update. If checking `document.activeElement` is needed we can add it.
+            // For now, let's assume the Parent -> Child flow is dominant.
+            // Issue: If I type "1", parent gets "0.01", parent sends back "0.01", we convert to "1".
+            // If I type "1.", parent gets "0.01", parent sends back "0.01", we convert to "1". DOT IS LOST.
+            // FIX: Only update localValue from props if the prop value is *different* from what our current localValue implies.
+
+            const currentImplied = convertValue(localValue, localUnit, mainUnit);
+            const incoming = parseFloat(value) || 0;
+            const implied = parseFloat(currentImplied) || 0;
+
+            // Tolerance for float comparison
+            if (Math.abs(incoming - implied) > 0.0001) {
+                setLocalValue(converted);
             }
         }, [value, mainUnit, localUnit]);
 
-        // When local unit changes, we don't necessarily convert the value *yet*?
-        // User wants: "if I put value in inches... it should convert"
-        // So simply changing the dropdown shouldn't change the number, just the interpretation?
-        // Wait, regular usage:
-        // 1. I see "10 ft".
-        // 2. I change dropdown to "in".
-        // 3. Current "10" is now treated as "10 inches"? Or does it convert "10 ft" to "120 in"?
-        // User said: "if I have dimension in inches, and if I put value in inches, so that it should convert that inch to feet"
-        // This implies: Select Inch -> Type Value -> Converts to Feet.
-        // So when I select "Inch", the input can probably clear or user overwrites it.
+        const handleChange = (e) => {
+            const newVal = e.target.value;
+            setLocalValue(newVal);
 
-        const handleBlur = () => {
-            if (localUnit !== mainUnit) {
-                // Convert LocalValue (in LocalUnit) -> MainValue (in MainUnit)
-                const converted = convertValue(localValue, localUnit, mainUnit);
-
-                // Update Parent
-                onChange({ target: { name, value: converted } });
-
-                // Reset Logal
-                setLocalUnit(mainUnit);
-                setLocalValue(converted);
-            } else {
-                // Just update parent with current value
-                onChange({ target: { name, value: localValue } });
+            // Real-time update to parent
+            if (newVal === '' || isNaN(parseFloat(newVal))) {
+                onChange({ target: { name, value: 0 } });
+                return;
             }
+
+            const converted = convertValue(newVal, localUnit, mainUnit);
+            onChange({ target: { name, value: converted } });
         };
 
-        const handleKeyDown = (e) => {
-            if (e.key === 'Enter') handleBlur();
+        const handleUnitChange = (e) => {
+            const newUnit = e.target.value;
+            setLocalUnit(newUnit);
+            // When unit changes, we want to keep the PHYSICAL size, so we update the number.
+            // Current value in Main Unit is `value`.
+            // New Display Value = convert `value` (Main) -> `newUnit`
+            // We rely on the useEffect [value, mainUnit, localUnit] to trigger?
+            // Yes, because we changed `localUnit`, the effect will fire, re-convert proper value to new unit.
         };
 
         return (
@@ -127,15 +140,14 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
                         type="number"
                         name={name}
                         value={localValue}
-                        onChange={(e) => setLocalValue(e.target.value)}
-                        onBlur={handleBlur}
-                        onKeyDown={handleKeyDown}
+                        onChange={handleChange}
+                        onWheel={(e) => e.target.blur()} // Prevent accidentally scrolling numbers
                         className="inputField"
                         style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0, borderRight: 'none', flex: 1 }}
                     />
                     <select
                         value={localUnit}
-                        onChange={(e) => setLocalUnit(e.target.value)}
+                        onChange={handleUnitChange}
                         style={{
                             width: '4.5rem',
                             padding: '0 0.2rem',
