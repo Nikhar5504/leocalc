@@ -120,6 +120,8 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
         const v = parseFloat(val) || 0;
         if (unit === 'm') return v * 100;
         if (unit === 'ft') return v * 30.48;
+        if (unit === 'in') return v * 2.54;
+        if (unit === 'mm') return v * 0.1;
         return v; // cm
     };
 
@@ -201,6 +203,8 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
                         <option value="m">Meters (m)</option>
                         <option value="ft">Feet (ft)</option>
                         <option value="cm">Centimeters (cm)</option>
+                        <option value="in">Inches (in)</option>
+                        <option value="mm">Millimeters (mm)</option>
                     </select>
                 </div>
 
