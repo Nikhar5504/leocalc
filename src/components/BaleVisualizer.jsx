@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 
-import { OrbitControls, Box, Edges, Text, Billboard } from '@react-three/drei';
+import { OrbitControls, Box, Edges, Text, Billboard, Line } from '@react-three/drei';
 
 function Container({ width, height, depth, displayData }) {
     const { unit, vL, vW, vH } = displayData || {};
@@ -27,16 +27,45 @@ function Container({ width, height, depth, displayData }) {
                     roughness={0.1}
                     metalness={0.1}
                 />
-                <Edges threshold={15}>
-                    <lineDashedMaterial
-                        color="#000080"
-                        linewidth={3}
-                        dashSize={0.3}
-                        gapSize={0.2}
-                        scale={1}
-                    />
-                </Edges>
             </Box>
+
+            {/* Custom Thick Dashed Edges using 'Line' (Line2) */}
+            {useMemo(() => {
+                const x = width / 2;
+                const y = height / 2;
+                const z = depth / 2;
+
+                // 12 Edges of a box
+                const points = [
+                    // Bottom Face
+                    [-x, -y, -z], [x, -y, -z],
+                    [x, -y, -z], [x, -y, z],
+                    [x, -y, z], [-x, -y, z],
+                    [-x, -y, z], [-x, -y, -z],
+                    // Top Face
+                    [-x, y, -z], [x, y, -z],
+                    [x, y, -z], [x, y, z],
+                    [x, y, z], [-x, y, z],
+                    [-x, y, z], [-x, y, -z],
+                    // Vertical Pillars
+                    [-x, -y, -z], [-x, y, -z],
+                    [x, -y, -z], [x, y, -z],
+                    [x, -y, z], [x, y, z],
+                    [-x, -y, z], [-x, y, z]
+                ];
+                return (
+                    <Line
+                        points={points}
+                        segments={true}
+                        color="#000080"      // Navy Blue
+                        lineWidth={3}        // Thick
+                        dashed={true}        // Dotted
+                        dashScale={1}        // Adjust frequency for visibility
+                        dashSize={0.2}
+                        gapSize={0.2}
+                    />
+                );
+            }, [width, height, depth])}
 
             {/* Labels Removed by User Request */}
         </group>
