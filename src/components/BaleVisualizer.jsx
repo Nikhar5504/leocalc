@@ -22,12 +22,14 @@ function Container({ width, height, depth, displayData }) {
             <Box args={[width, height, depth]} position={[0, 0, 0]}>
                 <meshStandardMaterial
                     transparent
-                    opacity={0.3}
-                    color="#bfdbfe"
+                    opacity={0.1}
+                    color="#94a3b8"
                     roughness={0.1}
                     metalness={0.1}
                 />
-                <Edges color="#000000" threshold={15} lineWidth={1} />
+                <Edges threshold={15}>
+                    <lineDashedMaterial color="black" linewidth={2} dashSize={10} gapSize={5} />
+                </Edges>
             </Box>
 
             {/* Labels Removed by User Request */}
