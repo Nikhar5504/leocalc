@@ -60,9 +60,9 @@ function Container({ width, height, depth, displayData }) {
                         color="#000080"      // Navy Blue
                         lineWidth={3}        // Thick
                         dashed={true}        // Dotted
-                        dashScale={1}        // Adjust frequency for visibility
-                        dashSize={0.2}
-                        gapSize={0.2}
+                        dashScale={1}
+                        dashSize={0.1}       // Small dots
+                        gapSize={0.1}        // Close together
                     />
                 );
             }, [width, height, depth])}
