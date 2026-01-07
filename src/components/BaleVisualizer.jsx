@@ -28,7 +28,13 @@ function Container({ width, height, depth, displayData }) {
                     metalness={0.1}
                 />
                 <Edges threshold={15}>
-                    <lineDashedMaterial color="black" linewidth={2} dashSize={10} gapSize={5} />
+                    <lineDashedMaterial
+                        color="#000000"
+                        linewidth={3}
+                        dashSize={0.2}
+                        gapSize={0.1}
+                        scale={1}
+                    />
                 </Edges>
             </Box>
 
