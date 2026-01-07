@@ -16,38 +16,28 @@ function App() {
   // Let's keep it simple: Show Calculators.
 
   // Lifted State
-  const [pricingInputs, setPricingInputs] = useState(() => {
-    const saved = localStorage.getItem('pricingInputs');
-    return saved ? JSON.parse(saved) : {
-      ppRate: 0,
-      conversionCost: 0,
-      bagWeight: 0,
-      transportPerBag: 0,
-      profitMargin: 0
-    };
+  const [pricingInputs, setPricingInputs] = useState({
+    ppRate: 0,
+    conversionCost: 0,
+    bagWeight: 0,
+    transportPerBag: 0,
+    profitMargin: 0
   });
 
-  const [freightInputs, setFreightInputs] = useState(() => {
-    const saved = localStorage.getItem('freightInputs');
-    const defaults = {
-      unit: 'm',
-      vehicleL: 0,
-      vehicleW: 0,
-      vehicleH: 0,
-      baleL: 0,
-      baleW: 0,
-      baleH: 0,
-      baleSize: 0,
-      freightCharge: 0,
-      efficiency: 100,
-      palletCapacity: 450,
-      customCount: ''
-    };
-    return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
+  const [freightInputs, setFreightInputs] = useState({
+    unit: 'm',
+    vehicleL: 0,
+    vehicleW: 0,
+    vehicleH: 0,
+    baleL: 0,
+    baleW: 0,
+    baleH: 0,
+    baleSize: 0,
+    freightCharge: 0,
+    efficiency: 100,
+    palletCapacity: 450,
+    customCount: ''
   });
-
-  useEffect(() => { localStorage.setItem('pricingInputs', JSON.stringify(pricingInputs)); }, [pricingInputs]);
-  useEffect(() => { localStorage.setItem('freightInputs', JSON.stringify(freightInputs)); }, [freightInputs]);
 
   const handlePricingChange = (e) => {
     const { name, value } = e.target;
