@@ -162,7 +162,7 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
 
     // Safety check for freight charge
     const fCharge = parseFloat(freightCharge) || 0;
-    const freightPerPiece = totalPieces > 0 ? fCharge / totalPieces : 0;
+    const freightPerPiece = fCharge > 0 ? totalPieces / fCharge : 0;
 
     const renderStandardInput = (label, name, suffix, props = {}) => (
         <div className="form-group">

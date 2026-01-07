@@ -107,12 +107,23 @@ export default function BaleVisualizer({ vehicleDims, baleDims, effectiveCount, 
     // effectiveCount comes in as the limit. 
     // If it's undefined/null, we might want a fallback, but logic handles it.
 
-    const maxDim = Math.max(vehicleDims.l, vehicleDims.w, vehicleDims.h) || 1;
+    // If all dims are 0 (fresh load), default to a placeholder size (e.g., 4m x 2.4m x 2.4m) 
+    // so the box doesn't vanish.
+    const isZeroState = (vehicleDims.l === 0 && vehicleDims.w === 0 && vehicleDims.h === 0);
+
+    // Placeholder in cm
+    const safeL = isZeroState ? 400 : vehicleDims.l;
+    const safeW = isZeroState ? 240 : vehicleDims.w; // W is Depth in our logic usually
+    const safeH = isZeroState ? 240 : vehicleDims.h;
+
+    const maxDim = Math.max(safeL, safeW, safeH) || 1;
     const scale = 8 / maxDim;
 
-    const vW = vehicleDims.l * scale;
-    const vH = vehicleDims.h * scale;
-    const vD = vehicleDims.w * scale;
+    const vW = safeL * scale;
+    const vH = safeH * scale;
+    const vD = safeW * scale; // Mapping Width to Depth per previous logic? Let's check. 
+    // Line 115 was: const vD = vehicleDims.w * scale;
+    // Yes, usually in 3D: L=x, H=y, W=z.
 
     const bW = baleDims.l * scale;
     const bH = baleDims.h * scale;
