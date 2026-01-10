@@ -57,12 +57,9 @@ function Container({ width, height, depth, displayData }) {
                     <Line
                         points={points}
                         segments={true}
-                        color="#000080"      // Navy Blue
-                        lineWidth={3}        // Thick
-                        dashed={true}        // Dotted
-                        dashScale={1}
-                        dashSize={0.1}       // Small dots
-                        gapSize={0.1}        // Close together
+                        color="#000000"      // Black for plain look
+                        lineWidth={1}        // Thin
+                        dashed={false}       // Solid line
                     />
                 );
             }, [width, height, depth])}
