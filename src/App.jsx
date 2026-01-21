@@ -4,16 +4,11 @@ import PricingCalculator from './components/PricingCalculator';
 import FreightCalculator from './components/FreightCalculator';
 import Settings from './components/Settings';
 
-function App() {
-  // Simplified State - No Auth/Session needed if we aren't saving to cloud? 
-  // User said "remove save functionality". Usually Auth is for saving. 
-  // However, `Auth.jsx` had a "Master Access" check. 
-  // For now I'll strip the session check to make it instant access if save is gone. 
-  // But wait, Pricing might be sensitive? 
-  // I will KEEP Auth for safety, but remove all Save/Load logic.
+import SupplySchedule from './components/SupplySchedule';
 
-  // Actually, without Save, Supabase is less needed. 
-  // Let's keep it simple: Show Calculators.
+function App() {
+  const [activeTab, setActiveTab] = useState('calculator');
+
 
   // Lifted State
   const [pricingInputs, setPricingInputs] = useState({
@@ -52,21 +47,41 @@ function App() {
   return (
     <div className="app-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: '1rem' }}>
       <main>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <section>
-            <h2 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Calculator</h2>
-            <PricingCalculator inputs={pricingInputs} onChange={handlePricingChange} />
-          </section>
+        {/* Tab Navigation */}
+        <nav className="tab-nav">
+          <button
+            className={`tab-btn ${activeTab === 'calculator' ? 'active' : ''}`}
+            onClick={() => setActiveTab('calculator')}
+          >
+            <Calculator size={18} /> Calculator
+          </button>
+          <button
+            className={`tab-btn ${activeTab === 'supply' ? 'active' : ''}`}
+            onClick={() => setActiveTab('supply')}
+          >
+            <Truck size={18} /> Supply Schedule
+          </button>
+        </nav>
 
-          <section>
-            <h2 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Freight Optimization</h2>
-            <FreightCalculator
-              inputs={freightInputs}
-              onChange={handleFreightChange}
-              bagWeight={pricingInputs.bagWeight}
-            />
-          </section>
-        </div>
+        {activeTab === 'calculator' ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <section>
+              <h2 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Calculator</h2>
+              <PricingCalculator inputs={pricingInputs} onChange={handlePricingChange} />
+            </section>
+
+            <section>
+              <h2 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Freight Optimization</h2>
+              <FreightCalculator
+                inputs={freightInputs}
+                onChange={handleFreightChange}
+                bagWeight={pricingInputs.bagWeight}
+              />
+            </section>
+          </div>
+        ) : (
+          <SupplySchedule />
+        )}
       </main>
     </div>
   );
