@@ -76,20 +76,31 @@ const DimensionInput = ({ label, name, value, mainUnit, onChange }) => {
 
     return (
         <div className="form-group">
-            <label>{label}</label>
-            <div className="input-group-joined">
+            <label style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.05em', color: '#94a3b8' }}>{label.toUpperCase()}</label>
+            <div className="input-wrapper" style={{ display: 'flex', gap: '0' }}>
                 <input
                     type="number"
                     name={name}
                     value={localValue}
                     onChange={handleChange}
-                    onWheel={(e) => e.target.blur()}
-                    className="glass-input input-joined"
+                    onWheel={(e) => e.target.blur()} // Prevent accidentally scrolling numbers
+                    className="inputField"
+                    style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0, borderRight: 'none', flex: 1 }}
                 />
                 <select
                     value={localUnit}
                     onChange={handleUnitChange}
-                    className="select-joined"
+                    style={{
+                        width: '4.5rem',
+                        padding: '0 0.2rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        borderTopLeftRadius: 0,
+                        borderBottomLeftRadius: 0,
+                        borderColor: '#e2e8f0',
+                        backgroundColor: localUnit !== mainUnit ? '#fef3c7' : '#f8fafc',
+                        color: localUnit !== mainUnit ? '#d97706' : '#64748b'
+                    }}
                 >
                     <option value="m">m</option>
                     <option value="ft">ft</option>
@@ -155,17 +166,17 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
 
     const renderStandardInput = (label, name, suffix, props = {}) => (
         <div className="form-group">
-            <label>{label}</label>
+            <label style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.05em', color: '#94a3b8' }}>{label.toUpperCase()}</label>
             <div className="input-wrapper">
                 <input
                     type="number"
                     name={name}
                     value={inputs[name]}
                     onChange={onChange}
-                    className="glass-input"
+                    className="inputField"
                     {...props}
                 />
-                {suffix && <span className="unit-suffix">{suffix}</span>}
+                {suffix && <span className="unit-suffix" style={{ fontSize: '0.75rem', fontWeight: 600 }}>{suffix}</span>}
             </div>
         </div>
     );
@@ -184,11 +195,11 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
         <div className="freight-layout">
             {/* Left: Inputs Section */}
             <div className="card">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="card-header">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h3 style={{ fontSize: '0.9rem', color: '#334155', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Truck size={18} /> Freight Inputs
                     </h3>
-                    <select name="unit" value={unit} onChange={onChange} className="glass-input" style={{ width: 'auto' }}>
+                    <select name="unit" value={unit} onChange={onChange} style={{ width: 'auto', padding: '0.4rem', fontSize: '0.85rem', borderColor: '#cbd5e1', borderRadius: '4px' }}>
                         <option value="m">Meters (m)</option>
                         <option value="ft">Feet (ft)</option>
                         <option value="cm">Centimeters (cm)</option>
@@ -197,41 +208,41 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
                     </select>
                 </div>
 
-                <div className="flex flex-col gap-6">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
                     {/* Vehicle Section */}
                     <div>
-                        <h4 className="text-xs font-bold text-slate-500 uppercase mb-3 border-b border-slate-200 pb-1">
+                        <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '0.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.2rem' }}>
                             Vehicle Dimensions
                         </h4>
-                        <div className="form-grid">
+                        <div className="form-grid" style={{ gap: '0.75rem' }}>
                             {renderDimensionInput("Length", "vehicleL")}
                             {renderDimensionInput("Width", "vehicleW")}
                             {renderDimensionInput("Height", "vehicleH")}
                         </div>
                     </div>
 
-                    {/* Pallet Section */}
+                    {/* Pallet Section (Renamed from Bale) */}
                     <div>
-                        <h4 className="text-xs font-bold text-slate-500 uppercase mb-3 border-b border-slate-200 pb-1">
+                        <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '0.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.2rem' }}>
                             Pallet Dimensions
                         </h4>
-                        <div className="form-grid">
+                        <div className="form-grid" style={{ gap: '0.75rem' }}>
                             {renderDimensionInput("Length", "baleL")}
                             {renderDimensionInput("Width", "baleW")}
                             {renderDimensionInput("Height", "baleH")}
 
                             <div className="form-group">
-                                <label>PALLET CAPACITY</label>
+                                <label style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.05em', color: '#94a3b8' }}>PALLET CAPACITY</label>
                                 <div className="input-wrapper">
                                     <input
                                         type="number"
                                         name="palletCapacity"
                                         value={inputs.palletCapacity}
                                         onChange={onChange}
-                                        className="glass-input"
+                                        className="inputField"
                                     />
-                                    <span className="unit-suffix">kg</span>
+                                    <span className="unit-suffix" style={{ fontSize: '0.75rem', fontWeight: 600 }}>kg</span>
                                 </div>
                             </div>
                         </div>
@@ -239,27 +250,27 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
 
                     {/* Optimization Section */}
                     <div>
-                        <h4 className="text-xs font-bold text-slate-500 uppercase mb-3 border-b border-slate-200 pb-1">
+                        <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '0.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.2rem' }}>
                             Settings
                         </h4>
-                        <div className="form-grid">
+                        <div className="form-grid" style={{ gap: '0.75rem' }}>
                             {renderStandardInput("Efficiency", "efficiency", "%")}
                             {renderStandardInput("Freight Cost", "freightCharge", "INR")}
                         </div>
                     </div>
                 </div>
 
-                <div className="mt-6 pt-6 border-t border-slate-200 grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem' }}>
 
                     {/* 1. Total Pallets */}
                     <div>
-                        <div className="text-xs text-slate-500">Total Pallets (Physical)</div>
-                        <div className="font-bold text-lg text-slate-800">{totalBales}</div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Total Pallets (Physical)</div>
+                        <div style={{ fontWeight: 700, fontSize: '1rem' }}>{totalBales}</div>
                     </div>
 
                     {/* 2. Effective Pallets */}
                     <div>
-                        <div className="text-xs text-slate-500">Effective Pallets</div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Effective Pallets</div>
                         <div className="input-wrapper" style={{ maxWidth: '100px' }}>
                             <input
                                 type="number"
@@ -267,41 +278,42 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
                                 value={inputs.customCount ?? ''}
                                 onChange={onChange}
                                 placeholder={effectiveBales.toLocaleString(undefined, { maximumFractionDigits: 1 })}
-                                className="glass-input font-bold py-1 px-2 border-amber-300"
+                                className="inputField"
+                                style={{ fontWeight: 700, padding: '4px 8px', borderColor: inputs.customCount ? '#fbbf24' : '#e2e8f0' }}
                             />
                         </div>
-                        {inputs.customCount && <div className="text-xs text-amber-500 mt-1">* Overridden</div>}
+                        {inputs.customCount && <div style={{ fontSize: '0.7rem', color: '#fbbf24' }}>* Overridden</div>}
                     </div>
 
                     {/* 3. Pcs / Pallet */}
                     <div>
-                        <div className="text-xs text-slate-500 uppercase">Pcs / Pallet</div>
-                        <div className="text-lg font-bold text-slate-700">
+                        <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase' }}>Pcs / Pallet</div>
+                        <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#475569' }}>
                             {calculatedPcsPerPallet.toLocaleString()}
                         </div>
-                        {bWeight === 0 && <div className="text-xs text-red-500 mt-1">* Set Bag Wt (Pricing)</div>}
+                        {bWeight === 0 && <div style={{ fontSize: '0.6rem', color: '#ef4444', marginTop: '2px' }}>* Set Bag Wt (Pricing)</div>}
                     </div>
 
                     {/* 4. Total Pieces */}
                     <div>
-                        <div className="text-xs text-slate-500 uppercase">Total Pieces</div>
-                        <div className="text-lg font-bold text-slate-900">
+                        <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase' }}>Total Pieces</div>
+                        <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b' }}>
                             {totalPieces.toLocaleString()}
                         </div>
                     </div>
 
                     {/* 5. Freight / Piece */}
                     <div>
-                        <div className="text-xs text-slate-500 uppercase">Freight Per Piece</div>
-                        <div className="text-xl font-bold text-indigo-600">{formatCurrency(freightPerPiece)}</div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase' }}>Freight Per Piece</div>
+                        <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#4f46e5' }}>{formatCurrency(freightPerPiece)}</div>
                     </div>
                 </div>
             </div>
 
             {/* Right: Visualizer */}
-            <div className="card h-full min-h-[400px] overflow-hidden flex flex-col">
-                <h3 className="card-header border-b-0 mb-4 text-xs">3D Visualization</h3>
-                <div className="flex-1 bg-slate-50 rounded-lg overflow-hidden">
+            <div className="card" style={{ overflow: 'hidden', height: '100%' }}>
+                <h3 style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, marginBottom: '0.75rem', textTransform: 'uppercase' }}>3D Visualization</h3>
+                <div style={{ height: '400px', width: '100%', background: '#f1f5f9', borderRadius: '4px' }}>
                     <BaleVisualizer
                         vehicleDims={{ l: vL_cm, w: vW_cm, h: vH_cm }}
                         baleDims={{ l: bL_cm, w: bW_cm, h: bH_cm }}

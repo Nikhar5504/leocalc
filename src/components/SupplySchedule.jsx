@@ -182,7 +182,8 @@ export default function SupplySchedule() {
         <div className="supply-container fade-in">
 
             {/* Top Actions: Manage Vendors & Exports */}
-            <div className="flex justify-between items-center bg-white p-4 rounded-lg border border-slate-200 shadow-sm mobile-flex-col">
+            {/* Top Actions: Manage Vendors & Exports */}
+            <div className="action-bar mobile-flex-col">
                 <button
                     onClick={() => setShowVendorModal(true)}
                     className="btn-secondary"

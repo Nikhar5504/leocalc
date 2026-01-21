@@ -45,7 +45,7 @@ function App() {
   };
 
   return (
-    <div className="app-container">
+    <div className="app-container" style={{ maxWidth: '1400px', margin: '0 auto', padding: '1rem' }}>
       <main>
         {/* Tab Navigation */}
         <nav className="tab-nav">
@@ -64,14 +64,14 @@ function App() {
         </nav>
 
         {activeTab === 'calculator' ? (
-          <div className="calculator-layout">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <section>
-              <h2>Pricing & Profit</h2>
+              <h2 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Calculator</h2>
               <PricingCalculator inputs={pricingInputs} onChange={handlePricingChange} />
             </section>
 
             <section>
-              <h2>Freight Optimization</h2>
+              <h2 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Freight Optimization</h2>
               <FreightCalculator
                 inputs={freightInputs}
                 onChange={handleFreightChange}
