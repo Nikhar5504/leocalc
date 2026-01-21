@@ -272,10 +272,58 @@ label {
     border-bottom: 1px solid #e2e8f0;
   }
 
+  /* ... existing mobile styles ... */
   .card:first-child {
     border-top: none;
   }
+
+  /* Mobile Helpers */
+  .mobile-flex-col {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    align-items: stretch !important;
+  }
+
+  .w-full-mobile {
+    width: 100% !important;
+  }
+
+  .hidden-mobile {
+    display: none !important;
+  }
 }
+
+/* Modal Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.zoom-in-95 {
+  animation: zoomIn 0.2s ease-out;
+}
+
 
 /* --- Tab Navigation Overrides --- */
 .tab-nav {
@@ -319,8 +367,15 @@ label {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .po-summary-card {
@@ -476,7 +531,8 @@ label {
 .supply-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 600px; /* Ensure table doesn't collapse too much */
+  min-width: 600px;
+  /* Ensure table doesn't collapse too much */
 }
 
 .supply-table th {
@@ -603,23 +659,66 @@ label {
 }
 
 /* Utility Colors */
-.text-green-600 { color: #16a34a; }
-.text-amber-600 { color: #d97706; }
-.text-red-600 { color: #dc2626; }
-.text-slate-700 { color: #334155; }
+.text-green-600 {
+  color: #16a34a;
+}
 
-.bg-green-100 { background-color: #dcfce7; }
-.text-green-700 { color: #15803d; }
-.border-green-200 { border-color: #bbf7d0; }
+.text-amber-600 {
+  color: #d97706;
+}
 
-.bg-amber-100 { background-color: #fef3c7; }
-.text-amber-700 { color: #b45309; }
-.border-amber-200 { border-color: #fde68a; }
+.text-red-600 {
+  color: #dc2626;
+}
 
-.bg-blue-100 { background-color: #dbeafe; }
-.text-blue-700 { color: #1d4ed8; }
-.border-blue-200 { border-color: #bfdbfe; }
+.text-slate-700 {
+  color: #334155;
+}
 
-.bg-slate-100 { background-color: #f1f5f9; }
-.text-slate-600 { color: #475569; }
-.border-slate-200 { border-color: #e2e8f0; }
+.bg-green-100 {
+  background-color: #dcfce7;
+}
+
+.text-green-700 {
+  color: #15803d;
+}
+
+.border-green-200 {
+  border-color: #bbf7d0;
+}
+
+.bg-amber-100 {
+  background-color: #fef3c7;
+}
+
+.text-amber-700 {
+  color: #b45309;
+}
+
+.border-amber-200 {
+  border-color: #fde68a;
+}
+
+.bg-blue-100 {
+  background-color: #dbeafe;
+}
+
+.text-blue-700 {
+  color: #1d4ed8;
+}
+
+.border-blue-200 {
+  border-color: #bfdbfe;
+}
+
+.bg-slate-100 {
+  background-color: #f1f5f9;
+}
+
+.text-slate-600 {
+  color: #475569;
+}
+
+.border-slate-200 {
+  border-color: #e2e8f0;
+}
