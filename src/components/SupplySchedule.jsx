@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Trash2, FileDown, Settings, X, Download } from 'lucide-react';
+import { Plus, Trash2, FileDown, Settings, X, Download, Mail } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -7,13 +7,22 @@ export default function SupplySchedule() {
     // --- State ---
     const [poDetails, setPoDetails] = useState({
         customerName: '',
+        customerEmail: '',
         poNumber: '',
         totalQty: 10000,
     });
 
-    const [vendors, setVendors] = useState(['Vendor A', 'Vendor B', 'Vendor C']);
+    // Vendor State now stores objects: { name, email }
+    const [vendors, setVendors] = useState([
+        { name: 'Vendor A', email: '' },
+        { name: 'Vendor B', email: '' },
+        { name: 'Vendor C', email: '' }
+    ]);
     const [showVendorModal, setShowVendorModal] = useState(false);
+
+    // Vendor Form State
     const [newVendorName, setNewVendorName] = useState('');
+    const [newVendorEmail, setNewVendorEmail] = useState('');
 
     const [supplies, setSupplies] = useState([
         { id: 1, week: 'Week 1', vendor: 'Vendor A', plannedQty: 2500, receivedQty: 0, date: '2023-10-23', status: 'Received' },
@@ -21,7 +30,7 @@ export default function SupplySchedule() {
         { id: 3, week: 'Week 3', vendor: 'Vendor C', plannedQty: 2000, receivedQty: 0, date: '2023-11-06', status: 'Planned' },
     ]);
 
-    const [selectedVendorForExport, setSelectedVendorForExport] = useState('');
+    const [selectedVendorForExport, setSelectedVendorForExport] = useState(''); // Stores vendor NAME
 
     // --- Derived State (Calculations) ---
     const totalSupplied = useMemo(() => {
@@ -42,13 +51,11 @@ export default function SupplySchedule() {
             if (item.id !== id) return item;
 
             const updated = { ...item, [field]: value };
-
             if (field === 'receivedQty') {
                 if (Number(value) > 0 && Number(value) >= item.plannedQty) updated.status = 'Received';
                 else if (Number(value) > 0) updated.status = 'Partial';
                 else updated.status = 'Planned';
             }
-
             return updated;
         }));
     };
@@ -58,7 +65,7 @@ export default function SupplySchedule() {
         setSupplies([...supplies, {
             id: newId,
             week: `Week ${supplies.length + 1}`,
-            vendor: vendors[0] || '',
+            vendor: vendors[0]?.name || '',
             plannedQty: 0,
             receivedQty: 0,
             date: '',
@@ -72,93 +79,160 @@ export default function SupplySchedule() {
 
     // --- Vendor Management ---
     const addVendor = () => {
-        if (newVendorName.trim() && !vendors.includes(newVendorName.trim())) {
-            setVendors([...vendors, newVendorName.trim()]);
+        if (newVendorName.trim() && !vendors.find(v => v.name === newVendorName.trim())) {
+            setVendors([...vendors, { name: newVendorName.trim(), email: newVendorEmail.trim() }]);
             setNewVendorName('');
+            setNewVendorEmail('');
         }
     };
 
-    const removeVendor = (vendor) => {
-        setVendors(vendors.filter(v => v !== vendor));
+    const removeVendor = (vendorName) => {
+        setVendors(vendors.filter(v => v.name !== vendorName));
     };
 
-    // --- PDF Export Logic ---
+    // --- PDF & Email Logic ---
 
-    // 1. Customer Export (Hides Vendors, Shows "Leopack")
-    const exportCustomerPDF = () => {
+    // Helper: Header Design
+    const drawHeader = (doc, title, subtitle) => {
+        // Brand Color Strip
+        doc.setFillColor(37, 99, 235); // Blue
+        doc.rect(0, 0, 210, 40, 'F');
+
+        // Title
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(24);
+        doc.setFont("helvetica", "bold");
+        doc.text("LEOPACK", 14, 20);
+
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "normal");
+        doc.text(title, 200, 20, { align: 'right' });
+
+        if (subtitle) {
+            doc.setFontSize(10);
+            doc.setTextColor(226, 232, 240);
+            doc.text(subtitle, 200, 28, { align: 'right' });
+        }
+    };
+
+    // 1. Customer Export
+    const handleCustomerAction = () => {
         const doc = new jsPDF();
 
-        // Header
-        doc.setFontSize(20);
-        doc.setTextColor(37, 99, 235); // Primary Blue
-        doc.text("Supply Schedule", 14, 20);
+        drawHeader(doc, "SUPPLY SCHEDULE", poDetails.customerName);
 
+        // Info Block
+        doc.setTextColor(51, 65, 85);
         doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text(`Customer: ${poDetails.customerName}`, 14, 30);
-        doc.text(`PO Number: ${poDetails.poNumber}`, 14, 35);
-        doc.text(`Total Qty: ${poDetails.totalQty.toLocaleString()}`, 14, 40);
+        doc.text(`Customer: ${poDetails.customerName}`, 14, 50);
+        if (poDetails.customerEmail) doc.text(`Email: ${poDetails.customerEmail}`, 14, 55);
+        doc.text(`PO Number: ${poDetails.poNumber}`, 14, 60);
+
+        // Summary Block
+        doc.text(`Total Qty: ${poDetails.totalQty.toLocaleString()}`, 140, 50);
+        doc.text(`Supplied: ${totalSupplied.toLocaleString()}`, 140, 55);
+        doc.setFont("helvetica", "bold");
+        doc.text(`Balance: ${balance.toLocaleString()}`, 140, 60);
 
         // Table
         const tableData = supplies.map(row => [
             row.week,
             row.date,
-            "Leopack", // STATIC Supplier Name
+            "Leopack", // Static
             Number(row.plannedQty).toLocaleString(),
             row.status
         ]);
 
         autoTable(doc, {
-            startY: 50,
+            startY: 70,
             head: [['Week', 'Date', 'Supplier', 'Planned Qty', 'Status']],
             body: tableData,
-            theme: 'grid',
-            headStyles: { fillColor: [37, 99, 235] }, // Blue Header
-            styles: { fontSize: 10 },
+            theme: 'striped',
+            headStyles: { fillColor: [37, 99, 235] },
+            alternateRowStyles: { fillColor: [248, 250, 252] },
         });
 
-        // Footer
-        const finalY = doc.lastAutoTable.finalY + 10;
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text("Generated by Leopack Supply System", 14, finalY);
+        // Save PDF
+        const filename = `Supply_Schedule_${poDetails.customerName || 'Customer'}.pdf`;
+        doc.save(filename);
 
-        doc.save(`Supply_Schedule_${poDetails.customerName || 'Customer'}.pdf`);
+        // Open Email Draft
+        if (poDetails.customerEmail) {
+            const subject = encodeURIComponent(`Supply Schedule Update: PO ${poDetails.poNumber}`);
+            const body = encodeURIComponent(
+                `Dear ${poDetails.customerName},
+
+Please find attached the latest supply schedule for PO ${poDetails.poNumber}.
+
+Summary:
+- Total PO Quantity: ${poDetails.totalQty.toLocaleString()}
+- Total Supplied: ${totalSupplied.toLocaleString()}
+- Pending Balance: ${balance.toLocaleString()}
+
+(Please drag and drop the downloaded "${filename}" into this email)
+
+Best regards,
+Leopack Team`
+            );
+            window.location.href = `mailto:${poDetails.customerEmail}?subject=${subject}&body=${body}`;
+        }
     };
 
-    // 2. Vendor Export (Specific Vendor Only)
-    const exportVendorPDF = () => {
+    // 2. Vendor Export
+    const handleVendorAction = () => {
         if (!selectedVendorForExport) return;
 
+        const vendorData = vendors.find(v => v.name === selectedVendorForExport);
         const vendorSupplies = supplies.filter(s => s.vendor === selectedVendorForExport);
+
         const doc = new jsPDF();
 
-        // Header
-        doc.setFontSize(20);
-        doc.setTextColor(30);
-        doc.text("Purchase Order Schedule", 14, 20);
+        drawHeader(doc, "PURCHASE ORDER", selectedVendorForExport);
 
-        doc.setFontSize(12);
-        doc.setTextColor(50);
-        doc.text(`Vendor: ${selectedVendorForExport}`, 14, 30);
+        // Info
+        doc.setTextColor(51, 65, 85);
+        doc.setFontSize(10);
+        doc.text(`To: ${selectedVendorForExport}`, 14, 50);
+        if (vendorData?.email) doc.text(`Email: ${vendorData.email}`, 14, 55);
+        doc.text(`Ref PO: ${poDetails.poNumber}`, 14, 60);
 
         // Table
         const tableData = vendorSupplies.map(row => [
             row.week,
             row.date,
-            "Jumbo Bags", // Generic Item Name
+            "Jumbo Bags", // Generic Item
             Number(row.plannedQty).toLocaleString(),
         ]);
 
         autoTable(doc, {
-            startY: 40,
-            head: [['Week', 'Supply Date', 'Item', 'Quantity']],
+            startY: 70,
+            head: [['Week', 'Expected Date', 'Item Description', 'Quantity']],
             body: tableData,
             theme: 'striped',
-            headStyles: { fillColor: [71, 85, 105] }, // Slate Header
+            headStyles: { fillColor: [71, 85, 105] }, // Slate
         });
 
-        doc.save(`PO_Schedule_${selectedVendorForExport}.pdf`);
+        // Save PDF
+        const filename = `PO_Schedule_${selectedVendorForExport}.pdf`;
+        doc.save(filename);
+
+        // Open Email
+        if (vendorData?.email) {
+            const subject = encodeURIComponent(`New Supply Plan: ${selectedVendorForExport}`);
+            const body = encodeURIComponent(
+                `Dear Team at ${selectedVendorForExport},
+
+Please see the attached supply schedule for our upcoming orders against PO ${poDetails.poNumber}.
+
+Please confirm receipt and delivery dates.
+
+(Note: Attach "${filename}" manually)
+
+Best,
+Leopack Procurement`
+            );
+            window.location.href = `mailto:${vendorData.email}?subject=${subject}&body=${body}`;
+        }
     };
 
 
@@ -181,8 +255,7 @@ export default function SupplySchedule() {
     return (
         <div className="supply-container fade-in">
 
-            {/* Top Actions: Manage Vendors & Exports */}
-            {/* Top Actions: Manage Vendors & Exports */}
+            {/* Top Actions */}
             <div className="action-bar mobile-flex-col">
                 <button
                     onClick={() => setShowVendorModal(true)}
@@ -194,10 +267,11 @@ export default function SupplySchedule() {
                 <div className="flex gap-4 items-center mobile-flex-col w-full-mobile">
                     {/* Customer Export */}
                     <button
-                        onClick={exportCustomerPDF}
+                        onClick={handleCustomerAction}
                         className="btn-primary flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors w-full-mobile justify-center"
+                        title="Download PDF & Draft Email"
                     >
-                        <FileDown size={18} /> Export Customer Schedule
+                        <Mail size={18} /> Export & Email Customer
                     </button>
 
                     <div className="h-6 w-px bg-slate-300 hidden-mobile"></div>
@@ -209,16 +283,16 @@ export default function SupplySchedule() {
                             onChange={(e) => setSelectedVendorForExport(e.target.value)}
                             className="glass-input py-2 text-sm w-full-mobile"
                         >
-                            <option value="">Select Vendor to Export...</option>
-                            {vendors.map(v => <option key={v} value={v}>{v}</option>)}
+                            <option value="">Select Vendor...</option>
+                            {vendors.map(v => <option key={v.name} value={v.name}>{v.name}</option>)}
                         </select>
                         <button
-                            onClick={exportVendorPDF}
+                            onClick={handleVendorAction}
                             disabled={!selectedVendorForExport}
                             className="btn-secondary whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed w-full-mobile justify-center"
-                            title="Export Vendor PO PDF"
+                            title="Download PDF & Draft Email"
                         >
-                            <Download size={18} />
+                            <Mail size={18} /> Email Vendor
                         </button>
                     </div>
                 </div>
@@ -235,6 +309,18 @@ export default function SupplySchedule() {
                             value={poDetails.customerName}
                             onChange={handlePoChange}
                             placeholder="Enter Customer..."
+                            className="glass-input"
+                        />
+                    </div>
+                    {/* NEW: Customer Email */}
+                    <div className="input-group">
+                        <label>Customer Email</label>
+                        <input
+                            type="email"
+                            name="customerEmail"
+                            value={poDetails.customerEmail}
+                            onChange={handlePoChange}
+                            placeholder="client@company.com"
                             className="glass-input"
                         />
                     </div>
@@ -338,7 +424,7 @@ export default function SupplySchedule() {
                                         >
                                             <option value="" disabled>Select Vendor</option>
                                             {vendors.map(v => (
-                                                <option key={v} value={v}>{v}</option>
+                                                <option key={v.name} value={v.name}>{v.name}</option>
                                             ))}
                                         </select>
                                     </td>
@@ -356,7 +442,6 @@ export default function SupplySchedule() {
                                             value={row.receivedQty}
                                             onChange={(e) => updateSupply(row.id, 'receivedQty', e.target.value)}
                                             className="table-input text-right font-mono"
-                                            // Highlight if received > 0 for quick visibility
                                             style={{ color: row.receivedQty > 0 ? '#10b981' : 'inherit', fontWeight: row.receivedQty > 0 ? '600' : 'normal' }}
                                         />
                                     </td>
@@ -401,29 +486,43 @@ export default function SupplySchedule() {
                             </button>
                         </div>
 
-                        <div className="flex gap-2 mb-4">
-                            <input
-                                type="text"
-                                value={newVendorName}
-                                onChange={(e) => setNewVendorName(e.target.value)}
-                                placeholder="New Vendor Name"
-                                className="glass-input flex-1"
-                                onKeyDown={(e) => e.key === 'Enter' && addVendor()}
-                            />
-                            <button
-                                onClick={addVendor}
-                                className="bg-slate-800 text-white px-4 rounded-md font-medium hover:bg-slate-700 transition-colors"
-                            >
-                                Add
-                            </button>
+                        {/* ADD VENDOR FORM */}
+                        <div className="flex flex-col gap-3 mb-6 p-4 bg-slate-50 rounded-lg border border-slate-100">
+                            <h4 className="text-sm font-semibold text-slate-500 uppercase">Add New Vendor</h4>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={newVendorName}
+                                    onChange={(e) => setNewVendorName(e.target.value)}
+                                    placeholder="Vendor Name"
+                                    className="glass-input flex-1"
+                                />
+                                <input
+                                    type="email"
+                                    value={newVendorEmail}
+                                    onChange={(e) => setNewVendorEmail(e.target.value)}
+                                    placeholder="Email (optional)"
+                                    className="glass-input flex-1"
+                                    onKeyDown={(e) => e.key === 'Enter' && addVendor()}
+                                />
+                                <button
+                                    onClick={addVendor}
+                                    className="bg-slate-800 text-white px-4 rounded-md font-medium hover:bg-slate-700 transition-colors"
+                                >
+                                    Add
+                                </button>
+                            </div>
                         </div>
 
                         <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
                             {vendors.map(vendor => (
-                                <div key={vendor} className="flex justify-between items-center bg-slate-50 p-3 rounded-md border border-slate-100">
-                                    <span className="font-medium text-slate-700">{vendor}</span>
+                                <div key={vendor.name} className="flex justify-between items-center bg-white p-3 rounded-md border border-slate-200 shadow-sm">
+                                    <div className="flex flex-col">
+                                        <span className="font-medium text-slate-800">{vendor.name}</span>
+                                        {vendor.email && <span className="text-xs text-slate-500">{vendor.email}</span>}
+                                    </div>
                                     <button
-                                        onClick={() => removeVendor(vendor)}
+                                        onClick={() => removeVendor(vendor.name)}
                                         className="text-slate-400 hover:text-red-500 transition-colors"
                                     >
                                         <Trash2 size={16} />
