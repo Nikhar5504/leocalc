@@ -1,187 +1,120 @@
 import React, { useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
+import { OrbitControls, Edges } from '@react-three/drei';
 
-import { OrbitControls, Box, Edges, Text, Billboard, Line } from '@react-three/drei';
-
-function Container({ width, height, depth, displayData }) {
-    const { unit, vL, vW, vH } = displayData || {};
-    // Modern "Stuck to wall" text style
-    const labelStyle = {
-        fontSize: Math.min(width, height, depth) * 0.15,
-        color: "black",
-        anchorX: "center",
-        anchorY: "middle",
-        fillOpacity: 0.7,
-        fontWeight: 'bold',
-        outlineWidth: 0, // No outline for cleaner "paint" look
-    };
-
-    return (
-        <group>
-            {/* Tinted Vehicle Box */}
-            <Box args={[width, height, depth]} position={[0, 0, 0]}>
-                <meshStandardMaterial
-                    transparent
-                    opacity={0.15}
-                    color="#bfdbfe"
-                    roughness={0.1}
-                    metalness={0.1}
-                />
-            </Box>
-
-            {/* Custom Thick Dashed Edges using 'Line' (Line2) */}
-            {useMemo(() => {
-                const x = width / 2;
-                const y = height / 2;
-                const z = depth / 2;
-
-                // 12 Edges of a box
-                const points = [
-                    // Bottom Face
-                    [-x, -y, -z], [x, -y, -z],
-                    [x, -y, -z], [x, -y, z],
-                    [x, -y, z], [-x, -y, z],
-                    [-x, -y, z], [-x, -y, -z],
-                    // Top Face
-                    [-x, y, -z], [x, y, -z],
-                    [x, y, -z], [x, y, z],
-                    [x, y, z], [-x, y, z],
-                    [-x, y, z], [-x, y, -z],
-                    // Vertical Pillars
-                    [-x, -y, -z], [-x, y, -z],
-                    [x, -y, -z], [x, y, -z],
-                    [x, -y, z], [x, y, z],
-                    [-x, -y, z], [-x, y, z]
-                ];
-                return (
-                    <Line
-                        points={points}
-                        segments={true}
-                        color="#000000"      // Black for plain look
-                        lineWidth={1}        // Thin
-                        dashed={false}       // Solid line
-                    />
-                );
-            }, [width, height, depth])}
-
-            {/* Labels Removed by User Request */}
-        </group>
-    );
-}
-
-function Bales({ limit, bWidth, bHeight, bDepth, vWidth, vHeight, vDepth, displayData }) {
-    const { unit, bL, bW, bH } = displayData || {};
-    const bales = useMemo(() => {
+// Bales Component without diagonal lines (using Edges instead of wireframe)
+const Bales = ({ count, bWidth, bHeight, bDepth, vWidth, vHeight, vDepth }) => {
+    const coords = useMemo(() => {
         const arr = [];
-        if (bWidth <= 0 || bHeight <= 0 || bDepth <= 0) return arr;
+        if (bWidth <= 0.01 || bHeight <= 0.01 || bDepth <= 0.01) return arr;
 
-        // Fitment limits (Capacity)
-        const nx = Math.floor(vWidth / bWidth);
-        const ny = Math.floor(vHeight / bHeight);
-        const nz = Math.floor(vDepth / bDepth);
+        const nx = Math.floor(vWidth / bWidth) || 1;
+        const ny = Math.floor(vHeight / bHeight) || 1;
+        const nz = Math.floor(vDepth / bDepth) || 1;
 
-        // Safety cap
-        const totalCapable = nx * ny * nz;
+        // Performance cap
+        const maxRender = 1000;
 
+        // Start Logic for Centering or Standard Filling
         const startX = -vWidth / 2 + bWidth / 2;
-        const startY = -vHeight / 2 + bHeight / 2;
+        const startY = -vHeight / 2 + bHeight / 2; // Floor is at -vH/2
         const startZ = -vDepth / 2 + bDepth / 2;
 
-        let count = 0;
-        // Fill until we hit the 'limit' (effectiveBales)
-        // We fill Y first (stack up), then X, then Z usually? Or fill floor first (X, Z) then up (Y)?
-        // Let's fill floor layer first: X then Z, then stack Y.
-        // Actually standard loop order:
-        // Vertical Stacking: Fill Y (Height) first to minimize floor footprint (Partial Loads)
-        // Outer loops: Floor grid (X, Z). Inner loop: Height (Y).
-        for (let x = 0; x < nx; x++) {
-            for (let z = 0; z < nz; z++) {
-                for (let y = 0; y < ny; y++) {
-                    if (count >= limit) return arr; // Stop exactly at limit
+        let c = 0;
 
-                    arr.push({
-                        pos: [
-                            startX + x * bWidth,
-                            startY + y * bHeight,
-                            startZ + z * bDepth
-                        ]
-                    });
-                    count++;
+        for (let y = 0; y < ny; y++) {
+            for (let z = 0; z < nz; z++) {
+                for (let x = 0; x < nx; x++) {
+                    if (c >= count) return arr;
+                    if (c >= maxRender) return arr;
+
+                    arr.push([
+                        startX + x * bWidth,
+                        startY + y * bHeight,
+                        startZ + z * bDepth
+                    ]);
+                    c++;
                 }
             }
         }
         return arr;
-    }, [limit, bWidth, bHeight, bDepth, vWidth, vHeight, vDepth]);
-
-    // High count optimization: render simplified volume if insane number
-    if (limit > 3000) {
-        // Just render a box for now as placeholder for perf
-        // or just cap it.
-        return (
-            <group>
-                {/* Optimization: Render slightly fewer or blocks if needed, but for now just capped loop above works */}
-            </group>
-        );
-    }
+    }, [count, bWidth, bHeight, bDepth, vWidth, vHeight, vDepth]);
 
     return (
         <group>
-            {bales.map((b, i) => (
-                <Box key={i} args={[bWidth, bHeight, bDepth]} position={b.pos}>
-                    <meshStandardMaterial color="#ffffff" roughness={0.4} />
-                    <Edges color="#000000" threshold={15} lineWidth={1.5} />
-                    {/* Labels Removed by User Request */}
-                </Box>
+            {coords.map((pos, i) => (
+                <mesh key={i} position={pos}>
+                    <boxGeometry args={[bWidth * 0.99, bHeight * 0.99, bDepth * 0.99]} />
+                    <meshStandardMaterial color="#ffffff" roughness={0.3} metallic={0.1} />
+                    {/* Clean black edges without diagonals */}
+                    <Edges
+                        threshold={15} // Only show sharp edges
+                        color="black"
+                        scale={1}
+                    />
+                </mesh>
             ))}
         </group>
     );
-}
+};
 
-export default function BaleVisualizer({ vehicleDims, baleDims, effectiveCount, displayData }) {
-    // effectiveCount comes in as the limit. 
-    // If it's undefined/null, we might want a fallback, but logic handles it.
-
-    // If all dims are 0 (fresh load), default to a placeholder size (e.g., 4m x 2.4m x 2.4m) 
-    // so the box doesn't vanish.
-    const isZeroState = (vehicleDims.l === 0 && vehicleDims.w === 0 && vehicleDims.h === 0);
-
-    // Placeholder in cm
-    const safeL = isZeroState ? 400 : vehicleDims.l;
-    const safeW = isZeroState ? 240 : vehicleDims.w; // W is Depth in our logic usually
-    const safeH = isZeroState ? 240 : vehicleDims.h;
-
-    const maxDim = Math.max(safeL, safeW, safeH) || 1;
-    const scale = 8 / maxDim;
-
-    const vW = safeL * scale;
-    const vH = safeH * scale;
-    const vD = safeW * scale; // Mapping Width to Depth per previous logic? Let's check. 
-    // Line 115 was: const vD = vehicleDims.w * scale;
-    // Yes, usually in 3D: L=x, H=y, W=z.
-
-    const bW = baleDims.l * scale;
-    const bH = baleDims.h * scale;
-    const bD = baleDims.w * scale;
+// Container with clean edges
+const Container = ({ width, height, depth }) => {
+    const w = Math.max(width, 0.1);
+    const h = Math.max(height, 0.1);
+    const d = Math.max(depth, 0.1);
 
     return (
-        <Canvas camera={{ position: [8, 8, 8], fov: 45 }}>
-            <color attach="background" args={['#f1f5f9']} />
-            <ambientLight intensity={0.7} />
-            <directionalLight position={[10, 20, 10]} intensity={1} castShadow />
-            <directionalLight position={[-10, 10, -10]} intensity={0.5} />
+        <group>
+            {/* Box Volume */}
+            <mesh>
+                <boxGeometry args={[w, h, d]} />
+                <meshStandardMaterial color="#e0f2fe" transparent opacity={0.1} depthWrite={false} side={2} />
+            </mesh>
 
-            {/* Auto Rotate Disabled */}
-            <OrbitControls autoRotate={false} dampeningFactor={0.1} />
+            {/* Clean Outer Edges */}
+            <mesh>
+                <boxGeometry args={[w, h, d]} />
+                <meshBasicMaterial transparent opacity={0} /> {/* Invisible mesh for edges */}
+                <Edges threshold={1} color="#0f172a" />
+            </mesh>
+        </group>
+    );
+};
 
-            <group position={[0, -vH / 4, 0]}>
-                <Container width={vW} height={vH} depth={vD} displayData={displayData} />
-                <Bales
-                    limit={effectiveCount}
-                    bWidth={bW} bHeight={bH} bDepth={bD}
-                    vWidth={vW} vHeight={vH} vDepth={vD}
-                    displayData={displayData}
-                />
-            </group>
-        </Canvas>
+
+export default function BaleVisualizer({ vehicleDims, baleDims, effectiveCount }) {
+    // 1. Inputs Normalization
+    const vL = Number(vehicleDims?.l || 1);
+    const vW = Number(vehicleDims?.w || 1);
+    const vH = Number(vehicleDims?.h || 1);
+
+    // Scale Logic
+    const maxDim = Math.max(vL, vW, vH) || 10;
+    const scale = 10 / maxDim;
+
+    const sL = vL * scale;
+    const sW = vW * scale; // Width -> Depth (Z)
+    const sH = vH * scale;
+
+    const bL = Number(baleDims?.l || 0) * scale;
+    const bW = Number(baleDims?.w || 0) * scale; // Width -> Depth (Z)
+    const bH = Number(baleDims?.h || 0) * scale;
+
+    return (
+        <div style={{ width: '100%', height: '100%', minHeight: '400px', background: '#f8fafc' }}>
+            <Canvas camera={{ position: [8, 8, 8], fov: 45 }}>
+                <ambientLight intensity={0.9} />
+                <directionalLight position={[10, 20, 10]} intensity={1.2} />
+                <OrbitControls makeDefault minPolarAngle={0} maxPolarAngle={Math.PI / 1.9} />
+
+                <group position={[0, 0, 0]}>
+                    <Container width={sL} height={sH} depth={sW} />
+                    <Bales count={effectiveCount} bWidth={bL} bHeight={bH} bDepth={bW} vWidth={sL} vHeight={sH} vDepth={sW} />
+                </group>
+
+                <gridHelper args={[20, 20, '#cbd5e1', '#e2e8f0']} position={[0, -sH / 2, 0]} />
+            </Canvas>
+        </div>
     );
 }

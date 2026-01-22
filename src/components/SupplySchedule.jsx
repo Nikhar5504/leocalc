@@ -3,59 +3,6 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 export default function SupplySchedule() {
-    // --- Design Injection ---
-    useEffect(() => {
-        // 1. Load Fonts
-        const fontLinks = [
-            "https://fonts.googleapis.com",
-            "https://fonts.gstatic.com",
-            "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap",
-            "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-        ];
-
-        fontLinks.forEach(href => {
-            if (!document.querySelector(`link[href="${href}"]`)) {
-                const link = document.createElement('link');
-                link.href = href;
-                link.rel = 'stylesheet';
-                if (href.includes('preconnect')) link.rel = 'preconnect';
-                if (href.includes('gstatic')) link.crossOrigin = '';
-                document.head.appendChild(link);
-            }
-        });
-
-        // 2. Load Tailwind
-        if (!document.querySelector('script[src*="tailwindcss"]')) {
-            const script = document.createElement('script');
-            script.src = "https://cdn.tailwindcss.com?plugins=forms,container-queries";
-            document.head.appendChild(script);
-
-            script.onload = () => {
-                // 3. Configure Tailwind
-                if (window.tailwind) {
-                    window.tailwind.config = {
-                        darkMode: "class",
-                        theme: {
-                            extend: {
-                                colors: {
-                                    "primary": "#1152d4",
-                                    "background-light": "#f6f6f8",
-                                    "background-dark": "#101622",
-                                    "surface-dark": "#161e2c",
-                                    "surface-border": "#232f48",
-                                    "text-secondary": "#92a4c9",
-                                },
-                                fontFamily: {
-                                    "display": ["Inter", "sans-serif"],
-                                    "body": ["Inter", "sans-serif"],
-                                },
-                            },
-                        },
-                    };
-                }
-            };
-        }
-    }, []);
 
     // Helper to load from local storage
     const loadState = (key, fallback) => {
@@ -109,7 +56,7 @@ export default function SupplySchedule() {
 
     // Colors for Vendor Allocation Bars
     const vendorColors = ['bg-emerald-500', 'bg-purple-500', 'bg-blue-500', 'bg-amber-500', 'bg-pink-500'];
-    const vendorTextColors = ['text-emerald-400', 'text-purple-400', 'text-blue-400', 'text-amber-400', 'text-pink-400'];
+    const vendorTextColors = ['text-emerald-600', 'text-purple-600', 'text-blue-600', 'text-amber-600', 'text-pink-600'];
 
     // Helper: Generate Week Label
     const getWeekLabel = (dateString) => {
@@ -233,6 +180,9 @@ export default function SupplySchedule() {
 
     const generatePdfDocument = async (recipientName, statsOverride = null) => {
         const doc = new jsPDF();
+
+        // We might not have white icon anymore since we moved to light mode, but let's keep logic safe
+        // Or assume we use standard logo if present.
         const logoFull = await loadImage('/leopack-logo-white.png');
         const logoIcon = await loadImage('/leopack-logo-icon.png');
 
@@ -250,9 +200,9 @@ export default function SupplySchedule() {
         }
 
         // Header
-        doc.setFillColor(0, 0, 128);
+        doc.setFillColor(0, 0, 128); // Dark Blue
         doc.rect(14, 15, 70, 24, 'F');
-        doc.setFillColor(0, 200, 83);
+        doc.setFillColor(0, 200, 83); // Green Highlight
         doc.rect(84, 15, 2, 24, 'F');
 
         if (logoFull) {
@@ -392,46 +342,47 @@ export default function SupplySchedule() {
 
     // --- Render ---
     return (
-        <div className="dark font-display text-white selection:bg-primary selection:text-white bg-background-dark min-h-screen flex flex-col pb-24 rounded-xl overflow-hidden shadow-2xl">
-            {/* Top Navigation Bar: Hidden/Embedded style from Design */}
+        <div className="font-display text-text-main selection:bg-primary selection:text-white bg-white min-h-screen flex flex-col pb-24 rounded-xl overflow-hidden shadow-sm border border-border-light">
 
             {/* Main Content */}
-            <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
+            <main className="flex-1 w-full max-w-[1600px] mx-auto px-6 py-6 flex flex-col gap-6">
 
                 {/* Page Header & Master Stats */}
                 <div className="flex flex-col gap-6">
                     {/* Title & Metadata */}
                     <div className="flex flex-wrap justify-between items-end gap-4">
                         <div className="flex flex-col gap-1">
-                            <h1 className="text-white text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">Supply Schedule</h1>
+                            {/* Header Text removed as it is now in App.jsx Tab Header */}
+                            {/* But we kept 'Supply Schedule' as h1 in previous, let's keep it as Section Title here? 
+                                 Actually App.jsx shows header. Let's make this more dashboard-y internal header */}
                             <div className="flex items-center gap-4 mt-1">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-text-secondary">Customer:</span>
+                                    <span className="text-text-muted text-sm font-semibold">Customer:</span>
                                     <input
                                         type="text"
                                         value={poDetails.customerName}
                                         onChange={(e) => handlePoChange('customerName', e.target.value)}
-                                        className="bg-transparent border-b border-surface-border focus:border-primary text-white font-semibold outline-none w-40"
+                                        className="bg-transparent border-b border-border-light focus:border-primary text-text-main font-bold outline-none w-40 text-sm"
                                     />
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-text-secondary">PO #:</span>
+                                    <span className="text-text-muted text-sm font-semibold">PO #:</span>
                                     <input
                                         type="text"
                                         value={poDetails.poNumber}
                                         onChange={(e) => handlePoChange('poNumber', e.target.value)}
-                                        className="bg-transparent border-b border-surface-border focus:border-primary text-white font-semibold outline-none w-32"
+                                        className="bg-transparent border-b border-border-light focus:border-primary text-text-main font-bold outline-none w-32 text-sm"
                                     />
                                 </div>
-                                <span className="px-2 py-0.5 rounded text-xs font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/20">Active</span>
+                                <span className="px-2 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">Active</span>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => setShowVendorModal(true)}
-                                className="h-10 px-4 rounded-lg bg-surface-border hover:bg-surface-border/80 border border-white/5 text-white text-sm font-medium transition-all flex items-center gap-2"
+                                className="h-9 px-4 rounded-lg bg-white border border-border-light hover:bg-slate-50 text-text-muted hover:text-text-main text-sm font-semibold transition-all flex items-center gap-2 shadow-sm"
                             >
-                                <span className="material-symbols-outlined text-[20px]">settings</span>
+                                <span className="material-symbols-outlined text-[18px]">settings</span>
                                 Manage Vendors
                             </button>
                         </div>
@@ -440,20 +391,20 @@ export default function SupplySchedule() {
                     {/* Stats Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* Total Quantity */}
-                        <div className="flex flex-col gap-3 rounded-xl p-5 border border-surface-border bg-surface-dark relative overflow-hidden group">
+                        <div className="flex flex-col gap-3 rounded-xl p-5 border border-border-light bg-slate-50 relative overflow-hidden group hover:shadow-md transition-all">
                             <div className="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                                <span className="material-symbols-outlined text-6xl">inventory_2</span>
+                                <span className="material-symbols-outlined text-6xl text-primary">inventory_2</span>
                             </div>
-                            <p className="text-text-secondary text-sm font-medium uppercase tracking-wider">Total PO Quantity</p>
+                            <p className="text-text-muted text-xs font-bold uppercase tracking-wider">Total PO Quantity</p>
                             <div className="flex items-end gap-2">
                                 <input
                                     type="number"
                                     value={poDetails.totalQty}
                                     onChange={(e) => handlePoChange('totalQty', Number(e.target.value))}
-                                    className="text-white text-3xl font-bold leading-tight bg-transparent border-none outline-none w-full"
+                                    className="text-text-main text-3xl font-bold leading-tight bg-transparent border-none outline-none w-full"
                                 />
                             </div>
-                            <div className="w-full bg-surface-border rounded-full h-1.5 mt-1">
+                            <div className="w-full bg-slate-200 rounded-full h-1.5 mt-1">
                                 <div className="bg-primary h-1.5 rounded-full" style={{ width: '100%' }}></div>
                             </div>
                         </div>
@@ -465,19 +416,19 @@ export default function SupplySchedule() {
                             const textColorClass = vendorTextColors[index % vendorTextColors.length];
 
                             return (
-                                <div key={vendor.name} className="flex flex-col gap-3 rounded-xl p-5 border border-surface-border bg-surface-dark relative overflow-hidden">
+                                <div key={vendor.name} className="flex flex-col gap-3 rounded-xl p-5 border border-border-light bg-slate-50 relative overflow-hidden hover:shadow-md transition-all">
                                     <div className="absolute right-0 top-0 p-3 opacity-5">
-                                        <span className="material-symbols-outlined text-6xl">person</span>
+                                        <span className="material-symbols-outlined text-6xl text-slate-900">person</span>
                                     </div>
-                                    <p className="text-text-secondary text-sm font-medium uppercase tracking-wider flex justify-between">
+                                    <p className="text-text-muted text-xs font-bold uppercase tracking-wider flex justify-between">
                                         {vendor.name}
                                         <span className={`${textColorClass} text-xs`}>{Math.round(allocPercent)}%</span>
                                     </p>
                                     <div className="flex items-end gap-2">
-                                        <p className="text-white text-3xl font-bold leading-tight">{Number(vendor.allocatedQty).toLocaleString()}</p>
-                                        <span className="text-sm font-medium text-text-secondary mb-1">Units</span>
+                                        <p className="text-text-main text-3xl font-bold leading-tight">{Number(vendor.allocatedQty).toLocaleString()}</p>
+                                        <span className="text-xs font-semibold text-text-muted mb-1">Units</span>
                                     </div>
-                                    <div className="w-full bg-surface-border rounded-full h-1.5 mt-1">
+                                    <div className="w-full bg-slate-200 rounded-full h-1.5 mt-1">
                                         <div className={`${colorClass} h-1.5 rounded-full`} style={{ width: `${Math.min(100, allocPercent)}%` }}></div>
                                     </div>
                                 </div>
@@ -487,21 +438,21 @@ export default function SupplySchedule() {
                 </div>
 
                 {/* Table Section */}
-                <div className="flex flex-col rounded-xl border border-surface-border bg-surface-dark shadow-sm overflow-hidden flex-1 min-h-[500px]">
+                <div className="flex flex-col rounded-xl border border-border-light bg-white shadow-sm overflow-hidden flex-1 min-h-[500px]">
                     {/* Toolbar */}
-                    <div className="flex flex-wrap justify-between items-center gap-3 px-4 py-3 border-b border-surface-border bg-surface-dark/50">
+                    <div className="flex flex-wrap justify-between items-center gap-3 px-4 py-3 border-b border-border-light bg-slate-50">
                         <div className="flex gap-2">
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-surface-border/50 text-sm text-text-secondary">
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-white border border-border-light text-xs font-semibold text-text-muted shadow-sm">
                                 <span>Shown:</span>
-                                <span className="text-white font-medium">{supplies.length} Rows</span>
+                                <span className="text-text-main">{supplies.length} Rows</span>
                             </div>
                         </div>
                         <button
                             onClick={addSupplyRow}
-                            className="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-9 bg-primary hover:bg-blue-600 transition-colors text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] px-4 shadow-lg shadow-primary/20"
+                            className="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-9 bg-primary hover:bg-primary/90 transition-colors text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] px-4 shadow-sm"
                         >
                             <span className="material-symbols-outlined text-[20px]">add</span>
-                            <span>Add Schedule Row</span>
+                            <span>Add Row</span>
                         </button>
                     </div>
 
@@ -509,25 +460,25 @@ export default function SupplySchedule() {
                     <div className="overflow-x-auto flex-1">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-surface-border/30 border-b border-surface-border">
-                                    <th className="px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider w-48">Vendor</th>
-                                    <th className="px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider w-48">Delivery Date</th>
-                                    <th className="px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider w-32">Week #</th>
-                                    <th className="px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider w-48 text-right">Planned Qty</th>
-                                    <th className="px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider w-40">Status</th>
-                                    <th className="px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider">Notes</th>
+                                <tr className="bg-slate-50 border-b border-border-light">
+                                    <th className="px-6 py-3 text-xs font-bold text-text-muted uppercase tracking-wider w-48">Vendor</th>
+                                    <th className="px-6 py-3 text-xs font-bold text-text-muted uppercase tracking-wider w-48">Delivery Date</th>
+                                    <th className="px-6 py-3 text-xs font-bold text-text-muted uppercase tracking-wider w-32">Week #</th>
+                                    <th className="px-6 py-3 text-xs font-bold text-text-muted uppercase tracking-wider w-48 text-right">Planned Qty</th>
+                                    <th className="px-6 py-3 text-xs font-bold text-text-muted uppercase tracking-wider w-40">Status</th>
+                                    <th className="px-6 py-3 text-xs font-bold text-text-muted uppercase tracking-wider">Notes</th>
                                     <th className="px-4 py-3 w-10"></th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-surface-border">
+                            <tbody className="divide-y divide-border-light">
                                 {supplies.map((row) => (
-                                    <tr key={row.id} className="hover:bg-surface-border/20 transition-colors group">
+                                    <tr key={row.id} className="hover:bg-slate-50 transition-colors group">
                                         {/* Vendor Select */}
                                         <td className="px-6 py-3">
                                             <select
                                                 value={row.vendor}
                                                 onChange={(e) => updateSupply(row.id, 'vendor', e.target.value)}
-                                                className="w-full bg-surface-dark border border-surface-border text-white text-sm rounded px-2 py-1 focus:ring-1 focus:ring-primary focus:border-primary appearance-none cursor-pointer"
+                                                className="w-full bg-white border border-border-light text-text-main text-sm font-medium rounded px-2 py-1.5 focus:ring-1 focus:ring-primary focus:border-primary appearance-none cursor-pointer shadow-sm"
                                             >
                                                 {vendors.map(v => (
                                                     <option key={v.name} value={v.name}>{v.name}</option>
@@ -540,18 +491,18 @@ export default function SupplySchedule() {
                                                 type="date"
                                                 value={row.date}
                                                 onChange={(e) => updateSupply(row.id, 'date', e.target.value)}
-                                                className="bg-surface-dark border border-surface-border text-white text-sm rounded px-2 py-1 focus:ring-1 focus:ring-primary focus:border-primary w-fit text-sm"
+                                                className="bg-white border border-border-light text-text-main text-sm font-medium rounded px-2 py-1.5 focus:ring-1 focus:ring-primary focus:border-primary w-fit shadow-sm"
                                             />
                                         </td>
                                         {/* Week (Read only/Auto) */}
-                                        <td className="px-6 py-3 text-text-secondary text-sm font-mono whitespace-nowrap">{row.week}</td>
+                                        <td className="px-6 py-3 text-text-muted text-sm font-mono whitespace-nowrap font-medium">{row.week}</td>
                                         {/* Qty Input */}
                                         <td className="px-6 py-3">
                                             <input
                                                 type="number"
                                                 value={row.plannedQty}
                                                 onChange={(e) => updateSupply(row.id, 'plannedQty', e.target.value)}
-                                                className="w-full text-right bg-surface-dark border border-surface-border text-white text-sm rounded px-2 py-1 focus:ring-1 focus:ring-primary focus:border-primary tabular-nums"
+                                                className="w-full text-right bg-white border border-border-light text-text-main text-sm font-bold rounded px-2 py-1.5 focus:ring-1 focus:ring-primary focus:border-primary tabular-nums shadow-sm"
                                             />
                                         </td>
                                         {/* Status Select */}
@@ -559,12 +510,12 @@ export default function SupplySchedule() {
                                             <select
                                                 value={row.status}
                                                 onChange={(e) => updateSupply(row.id, 'status', e.target.value)}
-                                                className="bg-transparent text-xs font-medium border-none focus:ring-0 cursor-pointer"
+                                                className="bg-transparent text-xs font-bold border-none focus:ring-0 cursor-pointer"
                                                 style={{
-                                                    color: row.status === 'Confirmed' ? '#34d399' :
-                                                        row.status === 'Received' ? '#34d399' :
-                                                            row.status === 'Pending' ? '#fbbf24' :
-                                                                row.status === 'In Transit' ? '#60a5fa' : '#94a3b8'
+                                                    color: row.status === 'Confirmed' ? '#16a34a' :
+                                                        row.status === 'Received' ? '#15803d' :
+                                                            row.status === 'Pending' ? '#d97706' :
+                                                                row.status === 'In Transit' ? '#2563eb' : '#64748b'
                                                 }}
                                             >
                                                 <option value="Planned">Planned</option>
@@ -581,14 +532,14 @@ export default function SupplySchedule() {
                                                 value={row.notes || ''}
                                                 placeholder="Add notes..."
                                                 onChange={(e) => updateSupply(row.id, 'notes', e.target.value)}
-                                                className="w-full bg-transparent border-none text-white text-sm px-0 py-1 focus:ring-0 placeholder:text-text-secondary/50"
+                                                className="w-full bg-transparent border-none text-text-main text-sm px-0 py-1 focus:ring-0 placeholder:text-slate-300 font-medium"
                                             />
                                         </td>
                                         {/* Delete Action */}
                                         <td className="px-4 py-3 text-right">
                                             <button
                                                 onClick={() => deleteSupplyRow(row.id)}
-                                                className="text-text-secondary hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-2"
+                                                className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-2"
                                             >
                                                 <span className="material-symbols-outlined text-[18px]">delete</span>
                                             </button>
@@ -602,32 +553,32 @@ export default function SupplySchedule() {
             </main>
 
             {/* Sticky Balance Tracker Footer */}
-            <div className="fixed bottom-0 left-0 w-full bg-background-dark border-t border-surface-border shadow-[0_-4px_20px_rgba(0,0,0,0.4)] z-40">
-                <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="fixed bottom-0 left-0 w-full bg-white border-t border-border-light shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-40">
+                <div className="max-w-[1600px] mx-auto px-6 py-4">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                         {/* Tracker Visualization */}
                         <div className="flex-1 w-full md:w-auto flex items-center gap-6">
                             <div className="flex flex-col gap-1 w-full max-w-2xl">
                                 <div className="flex justify-between items-end mb-1">
-                                    <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                                    <h3 className="text-sm font-bold text-text-main uppercase tracking-wider flex items-center gap-2">
                                         <span className="material-symbols-outlined text-primary">analytics</span>
                                         Balance Tracker
                                     </h3>
                                     <div className="flex gap-4 text-sm font-medium">
-                                        <span className="text-text-secondary">Total Planned: <span className="text-white">{totalPlanned.toLocaleString()}</span></span>
-                                        <span className="text-text-secondary">/</span>
-                                        <span className="text-text-secondary">PO Limit: <span className="text-white">{Number(poDetails.totalQty).toLocaleString()}</span></span>
+                                        <span className="text-text-muted">Total Planned: <span className="text-text-main font-bold">{totalPlanned.toLocaleString()}</span></span>
+                                        <span className="text-text-muted">/</span>
+                                        <span className="text-text-muted">PO Limit: <span className="text-text-main font-bold">{Number(poDetails.totalQty).toLocaleString()}</span></span>
                                     </div>
                                 </div>
-                                <div className="h-4 w-full bg-surface-border rounded-full overflow-hidden relative">
+                                <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden relative border border-slate-200">
                                     <div className={`absolute top-0 left-0 h-full ${excess > 0 ? 'bg-red-500' : 'bg-primary'} transition-all duration-300`} style={{ width: `${Math.min(100, (totalPlanned / poDetails.totalQty) * 100)}%` }}></div>
                                 </div>
                                 <div className="flex justify-between mt-1 h-5">
-                                    <span className={`text-xs font-bold ${balance === 0 ? 'text-emerald-400' : 'text-text-secondary'}`}>
+                                    <span className={`text-xs font-bold ${balance === 0 ? 'text-emerald-600' : 'text-text-muted'}`}>
                                         {balance === 0 ? "Perfectly Balanced" : `Remaining: ${balance.toLocaleString()}`}
                                     </span>
                                     {excess > 0 && (
-                                        <span className="text-xs font-bold text-red-400 flex items-center gap-1 animate-pulse">
+                                        <span className="text-xs font-bold text-red-500 flex items-center gap-1 animate-pulse">
                                             <span className="material-symbols-outlined text-[14px]">warning</span>
                                             EXCESS: +{excess.toLocaleString()} Units
                                         </span>
@@ -640,30 +591,30 @@ export default function SupplySchedule() {
                         <div className="flex items-center gap-3 w-full md:w-auto justify-end">
                             <button
                                 onClick={() => setShowVendorExportModal(true)}
-                                className="h-10 px-4 rounded-lg bg-surface-dark border border-surface-border hover:bg-surface-border hover:text-white text-text-secondary text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap"
+                                className="h-10 px-4 rounded-lg bg-white border border-border-light hover:bg-slate-50 text-text-muted text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap shadow-sm"
                             >
                                 <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span>
-                                Export Vendor PDF
+                                Vendor PDF
                             </button>
                             <button
                                 onClick={handleCustomerDownload}
-                                className="h-10 px-4 rounded-lg bg-white text-background-dark hover:bg-gray-200 text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap shadow-lg shadow-white/10"
+                                className="h-10 px-4 rounded-lg bg-text-main text-white hover:bg-slate-800 text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap shadow-lg shadow-slate-900/20"
                             >
                                 <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span>
-                                Export Customer PDF
+                                Customer PDF
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* --- Vendor Management Modal (Kept Simple/Functional) --- */}
+            {/* --- Vendor Management Modal --- */}
             {showVendorModal && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-surface-dark border border-surface-border rounded-xl p-6 w-full max-w-md shadow-2xl">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white border border-border-light rounded-xl p-6 w-full max-w-md shadow-2xl">
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-lg font-bold text-white">Manage Vendors</h3>
-                            <button onClick={() => setShowVendorModal(false)} className="text-text-secondary hover:text-white">
+                            <h3 className="text-lg font-bold text-text-main">Manage Vendors</h3>
+                            <button onClick={() => setShowVendorModal(false)} className="text-text-muted hover:text-text-main">
                                 <span className="material-symbols-outlined">close</span>
                             </button>
                         </div>
@@ -673,25 +624,25 @@ export default function SupplySchedule() {
                                 value={newVendorName}
                                 onChange={e => setNewVendorName(e.target.value)}
                                 placeholder="Name"
-                                className="bg-background-dark border border-surface-border text-white rounded px-3 py-2 flex-1"
+                                className="bg-slate-50 border border-border-light text-text-main rounded px-3 py-2 flex-1 focus:ring-1 focus:ring-primary focus:border-primary text-sm font-medium"
                             />
                             <input
                                 type="number"
                                 value={newVendorAllocation}
                                 onChange={e => setNewVendorAllocation(e.target.value)}
                                 placeholder="Qty"
-                                className="bg-background-dark border border-surface-border text-white rounded px-3 py-2 w-24"
+                                className="bg-slate-50 border border-border-light text-text-main rounded px-3 py-2 w-24 focus:ring-1 focus:ring-primary focus:border-primary text-sm font-medium"
                             />
-                            <button onClick={addVendor} className="bg-primary text-white px-4 rounded hover:bg-blue-600 font-bold">Add</button>
+                            <button onClick={addVendor} className="bg-primary text-white px-4 rounded hover:bg-primary/90 font-bold text-sm">Add</button>
                         </div>
                         <div className="space-y-2 max-h-60 overflow-y-auto">
                             {vendors.map(v => (
-                                <div key={v.name} className="flex justify-between items-center bg-background-dark p-3 rounded border border-surface-border">
+                                <div key={v.name} className="flex justify-between items-center bg-slate-50 p-3 rounded border border-border-light">
                                     <div>
-                                        <div className="font-medium text-white">{v.name}</div>
-                                        <div className="text-xs text-text-secondary">{Number(v.allocatedQty).toLocaleString()} Units</div>
+                                        <div className="font-bold text-text-main text-sm">{v.name}</div>
+                                        <div className="text-xs text-text-muted font-medium">{Number(v.allocatedQty).toLocaleString()} Units</div>
                                     </div>
-                                    <button onClick={() => removeVendor(v.name)} className="text-text-secondary hover:text-red-400">
+                                    <button onClick={() => removeVendor(v.name)} className="text-text-muted hover:text-red-500">
                                         <span className="material-symbols-outlined text-lg">delete</span>
                                     </button>
                                 </div>
@@ -703,11 +654,11 @@ export default function SupplySchedule() {
 
             {/* --- Vendor Export Modal --- */}
             {showVendorExportModal && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-surface-dark border border-surface-border rounded-xl p-6 w-full max-w-sm shadow-2xl">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white border border-border-light rounded-xl p-6 w-full max-w-sm shadow-2xl">
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-lg font-bold text-white">Select Vendor</h3>
-                            <button onClick={() => setShowVendorExportModal(false)} className="text-text-secondary hover:text-white">
+                            <h3 className="text-lg font-bold text-text-main">Select Vendor</h3>
+                            <button onClick={() => setShowVendorExportModal(false)} className="text-text-muted hover:text-text-main">
                                 <span className="material-symbols-outlined">close</span>
                             </button>
                         </div>
@@ -716,10 +667,10 @@ export default function SupplySchedule() {
                                 <button
                                     key={v.name}
                                     onClick={() => handleVendorDownload(v.name)}
-                                    className="p-3 text-left hover:bg-surface-border rounded text-white flex justify-between items-center group"
+                                    className="p-3 text-left hover:bg-slate-50 rounded text-text-main flex justify-between items-center group font-medium"
                                 >
                                     {v.name}
-                                    <span className="material-symbols-outlined text-text-secondary group-hover:text-white">download</span>
+                                    <span className="material-symbols-outlined text-text-muted group-hover:text-primary">download</span>
                                 </button>
                             ))}
                         </div>
