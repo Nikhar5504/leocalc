@@ -1,9 +1,62 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, Trash2, FileDown, Settings, X, Download } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 export default function SupplySchedule() {
+    // --- Design Injection ---
+    useEffect(() => {
+        // 1. Load Fonts
+        const fontLinks = [
+            "https://fonts.googleapis.com",
+            "https://fonts.gstatic.com",
+            "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap",
+            "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        ];
+
+        fontLinks.forEach(href => {
+            if (!document.querySelector(`link[href="${href}"]`)) {
+                const link = document.createElement('link');
+                link.href = href;
+                link.rel = 'stylesheet';
+                if (href.includes('preconnect')) link.rel = 'preconnect';
+                if (href.includes('gstatic')) link.crossOrigin = '';
+                document.head.appendChild(link);
+            }
+        });
+
+        // 2. Load Tailwind
+        if (!document.querySelector('script[src*="tailwindcss"]')) {
+            const script = document.createElement('script');
+            script.src = "https://cdn.tailwindcss.com?plugins=forms,container-queries";
+            document.head.appendChild(script);
+
+            script.onload = () => {
+                // 3. Configure Tailwind
+                if (window.tailwind) {
+                    window.tailwind.config = {
+                        darkMode: "class",
+                        theme: {
+                            extend: {
+                                colors: {
+                                    "primary": "#1152d4",
+                                    "background-light": "#f6f6f8",
+                                    "background-dark": "#101622",
+                                    "surface-dark": "#161e2c",
+                                    "surface-border": "#232f48",
+                                    "text-secondary": "#92a4c9",
+                                },
+                                fontFamily: {
+                                    "display": ["Inter", "sans-serif"],
+                                    "body": ["Inter", "sans-serif"],
+                                },
+                            },
+                        },
+                    };
+                }
+            };
+        }
+    }, []);
+
     // Helper to load from local storage
     const loadState = (key, fallback) => {
         const saved = localStorage.getItem(key);
@@ -12,17 +65,18 @@ export default function SupplySchedule() {
 
     // --- State ---
     const [poDetails, setPoDetails] = useState(() => loadState('leocalc_poDetails', {
-        customerName: '',
+        customerName: 'Global Sacks Inc.',
         customerEmail: '',
-        poNumber: '',
-        totalQty: 10000,
+        poNumber: '2024-LEO-885',
+        totalQty: 100000,
     }));
 
     const [vendors, setVendors] = useState(() => loadState('leocalc_vendors', [
-        { name: 'Vendor A', email: '', allocatedQty: 0 },
-        { name: 'Vendor B', email: '', allocatedQty: 0 },
-        { name: 'Vendor C', email: '', allocatedQty: 0 }
+        { name: 'Vendor A', email: '', allocatedQty: 40000 },
+        { name: 'Vendor B', email: '', allocatedQty: 60000 }
     ]));
+
+    // Modal State
     const [showVendorModal, setShowVendorModal] = useState(false);
     const [showVendorExportModal, setShowVendorExportModal] = useState(false);
 
@@ -32,9 +86,9 @@ export default function SupplySchedule() {
     const [newVendorAllocation, setNewVendorAllocation] = useState('');
 
     const [supplies, setSupplies] = useState(() => loadState('leocalc_supplies', [
-        { id: 1, week: '4th week of October', vendor: 'Vendor A', plannedQty: 2500, date: '2023-10-23', status: 'Received' },
-        { id: 2, week: '1st week of November', vendor: 'Vendor B', plannedQty: 3000, date: '2023-11-01', status: 'Planned' },
-        { id: 3, week: '2nd week of November', vendor: 'Vendor C', plannedQty: 2000, date: '2023-11-08', status: 'Planned' },
+        { id: 1, week: '4th week of October', vendor: 'Vendor A', plannedQty: 5000, date: '2023-10-12', status: 'Confirmed', notes: 'Initial batch per agreement' },
+        { id: 2, week: '1st week of November', vendor: 'Vendor B', plannedQty: 12000, date: '2023-10-15', status: 'Pending', notes: '-' },
+        { id: 3, week: '2nd week of November', vendor: 'Vendor A', plannedQty: 8000, date: '2023-10-20', status: 'Confirmed', notes: 'Expedited shipping requested' },
     ]));
 
     // --- Persistence Effects ---
@@ -42,16 +96,20 @@ export default function SupplySchedule() {
     useEffect(() => { localStorage.setItem('leocalc_vendors', JSON.stringify(vendors)); }, [vendors]);
     useEffect(() => { localStorage.setItem('leocalc_supplies', JSON.stringify(supplies)); }, [supplies]);
 
-    const [selectedVendorForExport, setSelectedVendorForExport] = useState('');
-
     // --- Derived State (Calculations) ---
-    // CHANGED: Logic now focuses on Planned Qty only
     const totalPlanned = useMemo(() => {
         return supplies.reduce((sum, item) => sum + (Number(item.plannedQty) || 0), 0);
     }, [supplies]);
 
     // Excess Calculation
     const excess = Math.max(0, totalPlanned - poDetails.totalQty);
+
+    // Balance = PO Total - Total Planned
+    const balance = Math.max(0, poDetails.totalQty - totalPlanned);
+
+    // Colors for Vendor Allocation Bars
+    const vendorColors = ['bg-emerald-500', 'bg-purple-500', 'bg-blue-500', 'bg-amber-500', 'bg-pink-500'];
+    const vendorTextColors = ['text-emerald-400', 'text-purple-400', 'text-blue-400', 'text-amber-400', 'text-pink-400'];
 
     // Helper: Generate Week Label
     const getWeekLabel = (dateString) => {
@@ -65,10 +123,6 @@ export default function SupplySchedule() {
         return `${ordinal} week of ${monthName}`;
     };
 
-    // Balance = PO Total - Total Planned
-    const balance = Math.max(0, poDetails.totalQty - totalPlanned);
-    const progressPercent = Math.min(100, (totalPlanned / poDetails.totalQty) * 100) || 0;
-
     // Date Calculations
     const dateStats = useMemo(() => {
         const dates = supplies.map(s => new Date(s.date)).filter(d => !isNaN(d));
@@ -76,10 +130,8 @@ export default function SupplySchedule() {
 
         const minDate = new Date(Math.min(...dates));
         const maxDate = new Date(Math.max(...dates));
-
-        // Approx days difference
         const diffTime = Math.abs(maxDate - minDate);
-        const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Inclusive
+        const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
         return {
             totalDays,
@@ -89,9 +141,8 @@ export default function SupplySchedule() {
 
 
     // --- Handlers ---
-    const handlePoChange = (e) => {
-        const { name, value } = e.target;
-        setPoDetails(prev => ({ ...prev, [name]: value }));
+    const handlePoChange = (field, value) => {
+        setPoDetails(prev => ({ ...prev, [field]: value }));
     };
 
     const updateSupply = (id, field, value) => {
@@ -137,7 +188,8 @@ export default function SupplySchedule() {
             vendor: vendors[0]?.name || '',
             plannedQty: 0,
             date: dateStr,
-            status: 'Planned'
+            status: 'Draft',
+            notes: ''
         }]);
     };
 
@@ -164,8 +216,6 @@ export default function SupplySchedule() {
     };
 
     // --- PDF Logic ---
-
-    // Helper: Load Image to Base64
     const loadImage = async (url) => {
         try {
             const response = await fetch(url);
@@ -181,14 +231,12 @@ export default function SupplySchedule() {
         }
     };
 
-    // Helper: Premium Header & Watermark
-    // statsOverride: { totalQty, balance, excess, closureDate, totalDays }
     const generatePdfDocument = async (recipientName, statsOverride = null) => {
         const doc = new jsPDF();
         const logoFull = await loadImage('/leopack-logo-white.png');
         const logoIcon = await loadImage('/leopack-logo-icon.png');
 
-        // --- Watermark (Big Icon, Transparent) ---
+        // Watermark
         if (logoIcon) {
             const pageWidth = doc.internal.pageSize.getWidth();
             const pageHeight = doc.internal.pageSize.getHeight();
@@ -196,55 +244,37 @@ export default function SupplySchedule() {
             const imgHeight = 100;
             const x = (pageWidth - imgWidth) / 2;
             const y = (pageHeight - imgHeight) / 2;
-
-            // Transparency
             doc.setGState(new doc.GState({ opacity: 0.1 }));
             doc.addImage(logoIcon, 'PNG', x, y, imgWidth, imgHeight);
-            doc.setGState(new doc.GState({ opacity: 1.0 })); // Reset
+            doc.setGState(new doc.GState({ opacity: 1.0 }));
         }
 
-        // --- HEADER REDESIGN ---
-        // 1. Blue Brand Box (Navy Blue)
-        // Reduced Height: 30 -> 24
+        // Header
         doc.setFillColor(0, 0, 128);
         doc.rect(14, 15, 70, 24, 'F');
-
-        // 2. Green Accent Strip
-        // Reduced Height: 30 -> 24
-        doc.setFillColor(0, 200, 83); // Bright Green
+        doc.setFillColor(0, 200, 83);
         doc.rect(84, 15, 2, 24, 'F');
 
-        // Logo (Centered in Blue Box)
         if (logoFull) {
-            // Fit within the blue box (70x24).
-            // Centered: x = 14 + (70 - 50)/2, y = 15 + (24 - 12)/2
-            const w = 50;
-            const h = 12; // Approximation for wide logo
+            const w = 50; const h = 12;
             const lx = 14 + (70 - w) / 2;
-            const ly = 15 + (24 - h) / 2; // Recalculated vertical center
+            const ly = 15 + (24 - h) / 2;
             doc.addImage(logoFull, 'PNG', lx, ly, w, h);
         } else {
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(16);
             doc.setFont("helvetica", "bold");
-            doc.text("LEOPACK", 49, 30, { align: "center" }); // Approx center y=30
+            doc.text("LEOPACK", 49, 30, { align: "center" });
         }
 
-        // 3. Title "Supply Schedule" (Right side)
-        doc.setTextColor(51, 65, 85); // Slate 700 / Dark Grey
-        doc.setFontSize(24); // Size 24
+        doc.setTextColor(51, 65, 85);
+        doc.setFontSize(24);
         doc.setFont("helvetica", "bold");
-        // Align Right (x=196 matches table border right edge)
-        // Vertical Center: 15 + 12 - 2 (baseline) ~ 25 or 30? 
-        // Box is at y=15, h=24. Middle is y=27. Text baseline ~ +1/3 fontsize(8) -> 35?
-        // Let's guess y=31 for visually centered text in 24px height starting at 15
         doc.text("Supply Schedule", 196, 31, { align: 'right' });
 
-        // --- Metadata Box ---
-        // Moved down to accomodate taller header (y = 15 + 30 + gap) -> y=55
+        // Metadata Box
         doc.setFillColor(248, 250, 252);
         doc.setDrawColor(226, 232, 240);
-
         const boxY = 55;
         doc.roundedRect(14, boxY, 182, 35, 2, 2, 'FD');
 
@@ -268,48 +298,38 @@ export default function SupplySchedule() {
         doc.text("EST. CLOSURE:", 80, boxY + 10);
         doc.setFont("helvetica", "normal");
         doc.text(dateStats.closureDate, 80, boxY + 15);
-
         doc.setFont("helvetica", "bold");
         doc.text("DURATION:", 80, boxY + 25);
         doc.setFont("helvetica", "normal");
         doc.text(`${dateStats.totalDays} Days`, 80, boxY + 30);
 
         // Col 3
-        // Use overridden stats if provided (Vendor Export), otherwise global (Customer Export)
         const pdfTotalQty = statsOverride ? statsOverride.totalQty : poDetails.totalQty;
         const pdfBalance = statsOverride ? statsOverride.balance : balance;
         const pdfExcess = statsOverride ? statsOverride.excess : excess;
-        // Dates usually same, but could be specific if computed. Using global for date/duration simplicity unless override needed.
-        // Vendor export might have subset dates, but usually overall closure date is relevant.
-        // Let's stick to global dates OR passed dates. 
-        // For simplicity, we use global dates unless passed. 
-        // Note: handleVendorDownload currently doesn't compute specific closureDate, so we use global.
 
         doc.setFont("helvetica", "bold");
         doc.text("TOTAL QTY:", 140, boxY + 10);
         doc.setFont("helvetica", "normal");
         doc.text(Number(pdfTotalQty).toLocaleString(), 140, boxY + 15);
-
         doc.setFont("helvetica", "bold");
         doc.text("BALANCE:", 140, boxY + 25);
 
         if (pdfExcess > 0) {
-            doc.setTextColor(220, 38, 38); // Red
+            doc.setTextColor(220, 38, 38);
             doc.text(`EXCESS: +${pdfExcess.toLocaleString()}`, 140, boxY + 30);
         } else {
             doc.setTextColor(220, 38, 38);
             doc.text(pdfBalance.toLocaleString(), 140, boxY + 30);
         }
 
-        // --- Footer ---
+        // Footer
         const pageHeight = doc.internal.pageSize.getHeight();
-        doc.setFillColor(0, 0, 128); // Navy Blue
+        doc.setFillColor(0, 0, 128);
         doc.rect(0, pageHeight - 15, 210, 15, 'F');
-
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(9);
         doc.setFont("helvetica", "normal");
-        // Added lots of space as requested
         doc.text("sales@leopack.in          |          Plot No.: 3002/F/1/S/113, GIDC Ankleshwar          |          +91 81285 99591", 105, pageHeight - 6, { align: 'center' });
 
         return doc;
@@ -322,69 +342,38 @@ export default function SupplySchedule() {
         doc.setTextColor(150);
         for (let i = 1; i <= pageCount; i++) {
             doc.setPage(i);
-            // Place above the blue footer bar
             doc.text(`Page ${i} of ${pageCount}`, 196, pageHeight - 18, { align: 'right' });
         }
     };
 
-    // 1. Customer Export
     const handleCustomerDownload = async () => {
         const doc = await generatePdfDocument(poDetails.customerName);
-
-        const tableData = supplies.map(row => [
-            row.week,
-            row.date,
-            "Leopack",
-            Number(row.plannedQty).toLocaleString(),
-            row.status
-        ]);
-
+        const tableData = supplies.map(row => [row.week, row.date, "Leopack", Number(row.plannedQty).toLocaleString(), row.status]);
         autoTable(doc, {
-            // Increased startY due to moved metadata box (y=55 + 35 + gap=10) -> 100
             startY: 100,
             head: [['WEEK', 'SUPPLY DATE', 'SUPPLIER', 'PLANNED QTY', 'STATUS']],
             body: tableData,
             theme: 'grid',
             headStyles: { fillColor: [15, 23, 42], textColor: 255, fontSize: 8, fontStyle: 'bold' },
-            columnStyles: {
-                3: { halign: 'left', fontStyle: 'bold' } // Planned Qty Left & Bold
-            },
+            columnStyles: { 3: { halign: 'left', fontStyle: 'bold' } },
             styles: { fontSize: 9, cellPadding: 3 },
             alternateRowStyles: { fillColor: [248, 250, 252] },
         });
-
         addPageNumbers(doc);
-
-        const filename = `Supply_Schedule_${poDetails.customerName || 'Customer'}.pdf`;
-        doc.save(filename);
+        doc.save(`Supply_Schedule_${poDetails.customerName || 'Customer'}.pdf`);
     };
 
-    // 2. Vendor Export
     const handleVendorDownload = async (vendorName) => {
         if (!vendorName) return;
-
         const vendorObj = vendors.find(v => v.name === vendorName);
         const vendorSupplies = supplies.filter(s => s.vendor === vendorName);
-
-        // Compute Vendor Specific Stats
         const vendorPreAllocated = Number(vendorObj?.allocatedQty) || 0;
         const vendorPlanned = vendorSupplies.reduce((sum, item) => sum + (Number(item.plannedQty) || 0), 0);
         const vendorBalance = Math.max(0, vendorPreAllocated - vendorPlanned);
         const vendorExcess = Math.max(0, vendorPlanned - vendorPreAllocated);
 
-        // Pass these stats to PDF Generator
-        const doc = await generatePdfDocument(vendorName, {
-            totalQty: vendorPreAllocated,
-            balance: vendorBalance,
-            excess: vendorExcess
-        });
-
-        const tableData = vendorSupplies.map(row => [
-            row.week,
-            row.date,
-            Number(row.plannedQty).toLocaleString(),
-            row.status
-        ]);
+        const doc = await generatePdfDocument(vendorName, { totalQty: vendorPreAllocated, balance: vendorBalance, excess: vendorExcess });
+        const tableData = vendorSupplies.map(row => [row.week, row.date, Number(row.plannedQty).toLocaleString(), row.status]);
 
         autoTable(doc, {
             startY: 100,
@@ -392,282 +381,318 @@ export default function SupplySchedule() {
             body: tableData,
             theme: 'grid',
             headStyles: { fillColor: [15, 23, 42], textColor: 255, fontSize: 8, fontStyle: 'bold' },
-            columnStyles: {
-                2: { halign: 'left', fontStyle: 'bold' } // Planned Qty Left & Bold (Index 2 now)
-            },
+            columnStyles: { 2: { halign: 'left', fontStyle: 'bold' } },
             styles: { fontSize: 9, cellPadding: 3, valign: 'middle' },
             alternateRowStyles: { fillColor: [248, 250, 252] },
         });
-
         addPageNumbers(doc);
-
-        const filename = `Supply_Schedule_${vendorName}.pdf`;
-        doc.save(filename);
+        doc.save(`Supply_Schedule_${vendorName}.pdf`);
         setShowVendorExportModal(false);
     };
 
-
-    // --- Color Logic ---
-    const getBalanceColor = () => {
-        if (balance === 0) return 'text-green-600';
-        if (balance < poDetails.totalQty * 0.2) return 'text-amber-600';
-        return 'text-red-600';
-    };
-
-    const getStatusBadgeStyles = (status) => {
-        switch (status) {
-            case 'Received': return 'bg-green-100 text-green-700 border-green-200';
-            case 'Partial': return 'bg-amber-100 text-amber-700 border-amber-200';
-            case 'In Transit': return 'bg-blue-100 text-blue-700 border-blue-200';
-            default: return 'bg-slate-100 text-slate-600 border-slate-200';
-        }
-    };
-
+    // --- Render ---
     return (
-        <div className="supply-container fade-in">
+        <div className="dark font-display text-white selection:bg-primary selection:text-white bg-background-dark min-h-screen flex flex-col pb-24 rounded-xl overflow-hidden shadow-2xl">
+            {/* Top Navigation Bar: Hidden/Embedded style from Design */}
 
-            {/* --- 1. PO Summary Section --- */}
-            <div className="po-summary-card">
-                <div className="po-grid">
-                    <div className="input-group">
-                        <label>Customer Name</label>
-                        <input
-                            type="text"
-                            name="customerName"
-                            value={poDetails.customerName}
-                            onChange={handlePoChange}
-                            placeholder="Enter Customer..."
-                            className="glass-input"
-                        />
-                    </div>
-                    <div className="input-group">
-                        <label>Customer Email</label>
-                        <input
-                            type="email"
-                            name="customerEmail"
-                            value={poDetails.customerEmail}
-                            onChange={handlePoChange}
-                            placeholder="client@company.com"
-                            className="glass-input"
-                        />
-                    </div>
-                    <div className="input-group">
-                        <label>PO Number</label>
-                        <input
-                            type="text"
-                            name="poNumber"
-                            value={poDetails.poNumber}
-                            onChange={handlePoChange}
-                            placeholder="#PO-12345"
-                            className="glass-input"
-                        />
-                    </div>
-                    <div className="input-group">
-                        <label>Total PO Qty</label>
-                        <input
-                            type="number"
-                            name="totalQty"
-                            value={poDetails.totalQty}
-                            onChange={handlePoChange}
-                            className="glass-input font-mono font-bold"
-                        />
-                    </div>
-                </div>
+            {/* Main Content */}
+            <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
 
-                <div className="po-stats">
-                    <div className="stat-box">
-                        <span className="stat-label">Planned</span> {/* Renamed from Supplied */}
-                        <span className="stat-value text-slate-700">{totalPlanned.toLocaleString()}</span>
-                    </div>
-                    <div className="stat-divider"></div>
-                    <div className="stat-box">
-                        <span className="stat-label">Balance after planning</span>
-                        {excess > 0 ? (
-                            <span className="stat-value text-red-600 flex items-center gap-2">
-                                0 <span className="text-sm bg-red-100 px-2 py-0.5 rounded-full border border-red-200">Excess: +{excess.toLocaleString()} ⚠️</span>
-                            </span>
-                        ) : (
-                            <span className={`stat-value ${getBalanceColor()}`}>{balance.toLocaleString()}</span>
-                        )}
-                    </div>
-                    <div className="stat-divider"></div>
-                    <div className="stat-box">
-                        <span className="stat-label">Closure Date</span>
-                        <span className="stat-value text-slate-600 text-2xl">{dateStats.closureDate}</span>
-                    </div>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="progress-container">
-                    <div className="progress-labels">
-                        <span>Progress</span>
-                        <span>{Math.round(progressPercent)}%</span>
-                    </div>
-                    <div className="progress-track">
-                        <div
-                            className="progress-fill"
-                            style={{ width: `${progressPercent}%` }}
-                        ></div>
-                    </div>
-                </div>
-            </div>
-
-            {/* --- 2. Supply Planning Table --- */}
-            <div className="table-card">
-                <div className="table-header flex justify-between items-center">
-                    <h3>Supply Plan</h3>
-
-                    <div className="flex flex-row items-center gap-2">
-                        <button onClick={() => setShowVendorModal(true)} className="btn-secondary btn-sm whitespace-nowrap" title="Manage Vendors">
-                            <Settings size={14} /> Manage Vendors
-                        </button>
-                        <button onClick={addSupplyRow} className="btn-secondary btn-sm whitespace-nowrap">
-                            <Plus size={16} /> Add Supply
-                        </button>
-                    </div>
-                </div>
-
-                <div className="table-wrapper">
-                    <table className="supply-table">
-                        <thead>
-                            <tr>
-                                <th width="15%">Week</th>
-                                <th width="15%">Date</th>
-                                <th width="25%">Vendor</th>
-                                <th width="20%" className="text-right">Planned</th>
-                                {/* Removed Received Column */}
-                                <th width="20%">Status</th>
-                                <th width="5%"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {supplies.map((row) => (
-                                <tr key={row.id}>
-                                    <td>
-                                        <input
-                                            type="text"
-                                            value={row.week}
-                                            onChange={(e) => updateSupply(row.id, 'week', e.target.value)}
-                                            className="table-input"
-                                        />
-                                    </td>
-                                    <td>
-                                        <input
-                                            type="date"
-                                            value={row.date}
-                                            onChange={(e) => updateSupply(row.id, 'date', e.target.value)}
-                                            className="table-input"
-                                        />
-                                    </td>
-                                    <td>
-                                        <select
-                                            value={row.vendor}
-                                            onChange={(e) => updateSupply(row.id, 'vendor', e.target.value)}
-                                            className="table-input"
-                                        >
-                                            <option value="" disabled>Select Vendor</option>
-                                            {vendors.map(v => (
-                                                <option key={v.name} value={v.name}>{v.name}</option>
-                                            ))}
-                                        </select>
-                                    </td>
-                                    <td className="text-right">
-                                        <input
-                                            type="number"
-                                            value={row.plannedQty}
-                                            onChange={(e) => updateSupply(row.id, 'plannedQty', e.target.value)}
-                                            className="table-input text-right font-mono"
-                                        />
-                                    </td>
-                                    {/* Removed Received Input */}
-                                    <td>
-                                        <span className={`status-badge ${getStatusBadgeStyles(row.status)}`}>
-                                            {row.status}
-                                        </span>
-                                    </td>
-                                    <td className="text-center">
-                                        <button
-                                            onClick={() => deleteSupplyRow(row.id)}
-                                            className="icon-btn-danger"
-                                            title="Remove"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {/* --- 3. Bottom Actions --- */}
-            <div className="flex flex-row justify-between items-center mt-4 mb-8 w-full gap-4">
-                <button
-                    onClick={handleCustomerDownload}
-                    className="btn-primary flex items-center gap-2 bg-slate-900 flex-shrink-0"
-                >
-                    <FileDown size={18} /> Download Customer Schedule
-                </button>
-                <button
-                    onClick={() => setShowVendorExportModal(true)}
-                    className="btn-secondary flex items-center gap-2 flex-shrink-0"
-                >
-                    <Download size={18} /> Download Vendor Schedule
-                </button>
-            </div>
-
-            {/* --- Vendor Management Modal --- */}
-            {showVendorModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl animate-in fade-in zoom-in-95 duration-200">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-bold text-slate-800">Manage Vendors</h3>
+                {/* Page Header & Master Stats */}
+                <div className="flex flex-col gap-6">
+                    {/* Title & Metadata */}
+                    <div className="flex flex-wrap justify-between items-end gap-4">
+                        <div className="flex flex-col gap-1">
+                            <h1 className="text-white text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">Supply Schedule</h1>
+                            <div className="flex items-center gap-4 mt-1">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-text-secondary">Customer:</span>
+                                    <input
+                                        type="text"
+                                        value={poDetails.customerName}
+                                        onChange={(e) => handlePoChange('customerName', e.target.value)}
+                                        className="bg-transparent border-b border-surface-border focus:border-primary text-white font-semibold outline-none w-40"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-text-secondary">PO #:</span>
+                                    <input
+                                        type="text"
+                                        value={poDetails.poNumber}
+                                        onChange={(e) => handlePoChange('poNumber', e.target.value)}
+                                        className="bg-transparent border-b border-surface-border focus:border-primary text-white font-semibold outline-none w-32"
+                                    />
+                                </div>
+                                <span className="px-2 py-0.5 rounded text-xs font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/20">Active</span>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
                             <button
-                                onClick={() => setShowVendorModal(false)}
-                                className="text-slate-400 hover:text-slate-600"
+                                onClick={() => setShowVendorModal(true)}
+                                className="h-10 px-4 rounded-lg bg-surface-border hover:bg-surface-border/80 border border-white/5 text-white text-sm font-medium transition-all flex items-center gap-2"
                             >
-                                <X size={20} />
+                                <span className="material-symbols-outlined text-[20px]">settings</span>
+                                Manage Vendors
                             </button>
                         </div>
+                    </div>
 
-                        <div className="flex flex-col gap-3 mb-6 p-4 bg-slate-50 rounded-lg border border-slate-100">
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={newVendorName}
-                                    onChange={(e) => setNewVendorName(e.target.value)}
-                                    placeholder="Vendor Name"
-                                    className="glass-input flex-1"
-                                />
+                    {/* Stats Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Total Quantity */}
+                        <div className="flex flex-col gap-3 rounded-xl p-5 border border-surface-border bg-surface-dark relative overflow-hidden group">
+                            <div className="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <span className="material-symbols-outlined text-6xl">inventory_2</span>
+                            </div>
+                            <p className="text-text-secondary text-sm font-medium uppercase tracking-wider">Total PO Quantity</p>
+                            <div className="flex items-end gap-2">
                                 <input
                                     type="number"
-                                    value={newVendorAllocation}
-                                    onChange={(e) => setNewVendorAllocation(e.target.value)}
-                                    placeholder="Qty"
-                                    className="glass-input w-24"
+                                    value={poDetails.totalQty}
+                                    onChange={(e) => handlePoChange('totalQty', Number(e.target.value))}
+                                    className="text-white text-3xl font-bold leading-tight bg-transparent border-none outline-none w-full"
                                 />
-                                <button
-                                    onClick={addVendor}
-                                    className="bg-slate-800 text-white px-4 rounded-md font-medium hover:bg-slate-700 transition-colors"
-                                >
-                                    Add
-                                </button>
+                            </div>
+                            <div className="w-full bg-surface-border rounded-full h-1.5 mt-1">
+                                <div className="bg-primary h-1.5 rounded-full" style={{ width: '100%' }}></div>
                             </div>
                         </div>
 
-                        <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                            {vendors.map(vendor => (
-                                <div key={vendor.name} className="flex justify-between items-center bg-white p-3 rounded-md border border-slate-200 shadow-sm">
-                                    <div className="flex flex-col">
-                                        <span className="font-medium text-slate-800">{vendor.name}</span>
-                                        <span className="text-xs text-slate-500">Allocated: {Number(vendor.allocatedQty || 0).toLocaleString()}</span>
+                        {/* Vendors Stats Dynamic */}
+                        {vendors.map((vendor, index) => {
+                            const allocPercent = poDetails.totalQty > 0 ? (vendor.allocatedQty / poDetails.totalQty) * 100 : 0;
+                            const colorClass = vendorColors[index % vendorColors.length];
+                            const textColorClass = vendorTextColors[index % vendorTextColors.length];
+
+                            return (
+                                <div key={vendor.name} className="flex flex-col gap-3 rounded-xl p-5 border border-surface-border bg-surface-dark relative overflow-hidden">
+                                    <div className="absolute right-0 top-0 p-3 opacity-5">
+                                        <span className="material-symbols-outlined text-6xl">person</span>
                                     </div>
-                                    <button
-                                        onClick={() => removeVendor(vendor.name)}
-                                        className="text-slate-400 hover:text-red-500 transition-colors"
-                                    >
-                                        <Trash2 size={16} />
+                                    <p className="text-text-secondary text-sm font-medium uppercase tracking-wider flex justify-between">
+                                        {vendor.name}
+                                        <span className={`${textColorClass} text-xs`}>{Math.round(allocPercent)}%</span>
+                                    </p>
+                                    <div className="flex items-end gap-2">
+                                        <p className="text-white text-3xl font-bold leading-tight">{Number(vendor.allocatedQty).toLocaleString()}</p>
+                                        <span className="text-sm font-medium text-text-secondary mb-1">Units</span>
+                                    </div>
+                                    <div className="w-full bg-surface-border rounded-full h-1.5 mt-1">
+                                        <div className={`${colorClass} h-1.5 rounded-full`} style={{ width: `${Math.min(100, allocPercent)}%` }}></div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Table Section */}
+                <div className="flex flex-col rounded-xl border border-surface-border bg-surface-dark shadow-sm overflow-hidden flex-1 min-h-[500px]">
+                    {/* Toolbar */}
+                    <div className="flex flex-wrap justify-between items-center gap-3 px-4 py-3 border-b border-surface-border bg-surface-dark/50">
+                        <div className="flex gap-2">
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-surface-border/50 text-sm text-text-secondary">
+                                <span>Shown:</span>
+                                <span className="text-white font-medium">{supplies.length} Rows</span>
+                            </div>
+                        </div>
+                        <button
+                            onClick={addSupplyRow}
+                            className="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-9 bg-primary hover:bg-blue-600 transition-colors text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] px-4 shadow-lg shadow-primary/20"
+                        >
+                            <span className="material-symbols-outlined text-[20px]">add</span>
+                            <span>Add Schedule Row</span>
+                        </button>
+                    </div>
+
+                    {/* Table */}
+                    <div className="overflow-x-auto flex-1">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-surface-border/30 border-b border-surface-border">
+                                    <th className="px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider w-48">Vendor</th>
+                                    <th className="px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider w-48">Delivery Date</th>
+                                    <th className="px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider w-32">Week #</th>
+                                    <th className="px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider w-48 text-right">Planned Qty</th>
+                                    <th className="px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider w-40">Status</th>
+                                    <th className="px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider">Notes</th>
+                                    <th className="px-4 py-3 w-10"></th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-surface-border">
+                                {supplies.map((row) => (
+                                    <tr key={row.id} className="hover:bg-surface-border/20 transition-colors group">
+                                        {/* Vendor Select */}
+                                        <td className="px-6 py-3">
+                                            <select
+                                                value={row.vendor}
+                                                onChange={(e) => updateSupply(row.id, 'vendor', e.target.value)}
+                                                className="w-full bg-surface-dark border border-surface-border text-white text-sm rounded px-2 py-1 focus:ring-1 focus:ring-primary focus:border-primary appearance-none cursor-pointer"
+                                            >
+                                                {vendors.map(v => (
+                                                    <option key={v.name} value={v.name}>{v.name}</option>
+                                                ))}
+                                            </select>
+                                        </td>
+                                        {/* Date Input */}
+                                        <td className="px-6 py-3">
+                                            <input
+                                                type="date"
+                                                value={row.date}
+                                                onChange={(e) => updateSupply(row.id, 'date', e.target.value)}
+                                                className="bg-surface-dark border border-surface-border text-white text-sm rounded px-2 py-1 focus:ring-1 focus:ring-primary focus:border-primary w-fit text-sm"
+                                            />
+                                        </td>
+                                        {/* Week (Read only/Auto) */}
+                                        <td className="px-6 py-3 text-text-secondary text-sm font-mono whitespace-nowrap">{row.week}</td>
+                                        {/* Qty Input */}
+                                        <td className="px-6 py-3">
+                                            <input
+                                                type="number"
+                                                value={row.plannedQty}
+                                                onChange={(e) => updateSupply(row.id, 'plannedQty', e.target.value)}
+                                                className="w-full text-right bg-surface-dark border border-surface-border text-white text-sm rounded px-2 py-1 focus:ring-1 focus:ring-primary focus:border-primary tabular-nums"
+                                            />
+                                        </td>
+                                        {/* Status Select */}
+                                        <td className="px-6 py-3">
+                                            <select
+                                                value={row.status}
+                                                onChange={(e) => updateSupply(row.id, 'status', e.target.value)}
+                                                className="bg-transparent text-xs font-medium border-none focus:ring-0 cursor-pointer"
+                                                style={{
+                                                    color: row.status === 'Confirmed' ? '#34d399' :
+                                                        row.status === 'Received' ? '#34d399' :
+                                                            row.status === 'Pending' ? '#fbbf24' :
+                                                                row.status === 'In Transit' ? '#60a5fa' : '#94a3b8'
+                                                }}
+                                            >
+                                                <option value="Planned">Planned</option>
+                                                <option value="Confirmed">Confirmed</option>
+                                                <option value="In Transit">In Transit</option>
+                                                <option value="Received">Received</option>
+                                                <option value="Draft">Draft</option>
+                                            </select>
+                                        </td>
+                                        {/* Notes Input */}
+                                        <td className="px-6 py-3">
+                                            <input
+                                                type="text"
+                                                value={row.notes || ''}
+                                                placeholder="Add notes..."
+                                                onChange={(e) => updateSupply(row.id, 'notes', e.target.value)}
+                                                className="w-full bg-transparent border-none text-white text-sm px-0 py-1 focus:ring-0 placeholder:text-text-secondary/50"
+                                            />
+                                        </td>
+                                        {/* Delete Action */}
+                                        <td className="px-4 py-3 text-right">
+                                            <button
+                                                onClick={() => deleteSupplyRow(row.id)}
+                                                className="text-text-secondary hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-2"
+                                            >
+                                                <span className="material-symbols-outlined text-[18px]">delete</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+
+            {/* Sticky Balance Tracker Footer */}
+            <div className="fixed bottom-0 left-0 w-full bg-background-dark border-t border-surface-border shadow-[0_-4px_20px_rgba(0,0,0,0.4)] z-40">
+                <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                        {/* Tracker Visualization */}
+                        <div className="flex-1 w-full md:w-auto flex items-center gap-6">
+                            <div className="flex flex-col gap-1 w-full max-w-2xl">
+                                <div className="flex justify-between items-end mb-1">
+                                    <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-primary">analytics</span>
+                                        Balance Tracker
+                                    </h3>
+                                    <div className="flex gap-4 text-sm font-medium">
+                                        <span className="text-text-secondary">Total Planned: <span className="text-white">{totalPlanned.toLocaleString()}</span></span>
+                                        <span className="text-text-secondary">/</span>
+                                        <span className="text-text-secondary">PO Limit: <span className="text-white">{Number(poDetails.totalQty).toLocaleString()}</span></span>
+                                    </div>
+                                </div>
+                                <div className="h-4 w-full bg-surface-border rounded-full overflow-hidden relative">
+                                    <div className={`absolute top-0 left-0 h-full ${excess > 0 ? 'bg-red-500' : 'bg-primary'} transition-all duration-300`} style={{ width: `${Math.min(100, (totalPlanned / poDetails.totalQty) * 100)}%` }}></div>
+                                </div>
+                                <div className="flex justify-between mt-1 h-5">
+                                    <span className={`text-xs font-bold ${balance === 0 ? 'text-emerald-400' : 'text-text-secondary'}`}>
+                                        {balance === 0 ? "Perfectly Balanced" : `Remaining: ${balance.toLocaleString()}`}
+                                    </span>
+                                    {excess > 0 && (
+                                        <span className="text-xs font-bold text-red-400 flex items-center gap-1 animate-pulse">
+                                            <span className="material-symbols-outlined text-[14px]">warning</span>
+                                            EXCESS: +{excess.toLocaleString()} Units
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+                            <button
+                                onClick={() => setShowVendorExportModal(true)}
+                                className="h-10 px-4 rounded-lg bg-surface-dark border border-surface-border hover:bg-surface-border hover:text-white text-text-secondary text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+                                Export Vendor PDF
+                            </button>
+                            <button
+                                onClick={handleCustomerDownload}
+                                className="h-10 px-4 rounded-lg bg-white text-background-dark hover:bg-gray-200 text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap shadow-lg shadow-white/10"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+                                Export Customer PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* --- Vendor Management Modal (Kept Simple/Functional) --- */}
+            {showVendorModal && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-surface-dark border border-surface-border rounded-xl p-6 w-full max-w-md shadow-2xl">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-lg font-bold text-white">Manage Vendors</h3>
+                            <button onClick={() => setShowVendorModal(false)} className="text-text-secondary hover:text-white">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <div className="flex gap-2 mb-6">
+                            <input
+                                type="text"
+                                value={newVendorName}
+                                onChange={e => setNewVendorName(e.target.value)}
+                                placeholder="Name"
+                                className="bg-background-dark border border-surface-border text-white rounded px-3 py-2 flex-1"
+                            />
+                            <input
+                                type="number"
+                                value={newVendorAllocation}
+                                onChange={e => setNewVendorAllocation(e.target.value)}
+                                placeholder="Qty"
+                                className="bg-background-dark border border-surface-border text-white rounded px-3 py-2 w-24"
+                            />
+                            <button onClick={addVendor} className="bg-primary text-white px-4 rounded hover:bg-blue-600 font-bold">Add</button>
+                        </div>
+                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                            {vendors.map(v => (
+                                <div key={v.name} className="flex justify-between items-center bg-background-dark p-3 rounded border border-surface-border">
+                                    <div>
+                                        <div className="font-medium text-white">{v.name}</div>
+                                        <div className="text-xs text-text-secondary">{Number(v.allocatedQty).toLocaleString()} Units</div>
+                                    </div>
+                                    <button onClick={() => removeVendor(v.name)} className="text-text-secondary hover:text-red-400">
+                                        <span className="material-symbols-outlined text-lg">delete</span>
                                     </button>
                                 </div>
                             ))}
@@ -676,28 +701,27 @@ export default function SupplySchedule() {
                 </div>
             )}
 
-            {/* --- Vendor Export Selection Modal --- */}
+            {/* --- Vendor Export Modal --- */}
             {showVendorExportModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-sm shadow-xl animate-in fade-in zoom-in-95 duration-200">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-bold text-slate-800">Select Vendor</h3>
-                            <button onClick={() => setShowVendorExportModal(false)} className="text-slate-400">
-                                <X size={20} />
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-surface-dark border border-surface-border rounded-xl p-6 w-full max-w-sm shadow-2xl">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-lg font-bold text-white">Select Vendor</h3>
+                            <button onClick={() => setShowVendorExportModal(false)} className="text-text-secondary hover:text-white">
+                                <span className="material-symbols-outlined">close</span>
                             </button>
                         </div>
-                        <p className="text-sm text-slate-500 mb-4">Choose a vendor to download their specific schedule.</p>
-                        <div className="space-y-2">
+                        <div className="flex flex-col gap-2">
                             {vendors.map(v => (
                                 <button
                                     key={v.name}
                                     onClick={() => handleVendorDownload(v.name)}
-                                    className="w-full text-left p-3 rounded-md border border-slate-200 hover:bg-slate-50 hover:border-slate-300 font-medium transition-all"
+                                    className="p-3 text-left hover:bg-surface-border rounded text-white flex justify-between items-center group"
                                 >
                                     {v.name}
+                                    <span className="material-symbols-outlined text-text-secondary group-hover:text-white">download</span>
                                 </button>
                             ))}
-                            {vendors.length === 0 && <p className="text-center italic text-slate-400 py-4">No vendors found.</p>}
                         </div>
                     </div>
                 </div>
