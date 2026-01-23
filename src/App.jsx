@@ -48,7 +48,7 @@ function App() {
   const [pricingInputs, setPricingInputs] = useState({
     ppRate: 115.42,
     conversionCost: 28.35,
-    bagWeight: 185,
+    bagWeight: 0.185, // kg
     transportPerBag: 2.50,
     profitMargin: 18
   });

@@ -5,12 +5,12 @@ export default function PricingCalculator({ inputs, onChange }) {
     // Parsing Inputs
     const ppRate = parseFloat(inputs.ppRate) || 0;         // ₹/kg
     const conversionCost = parseFloat(inputs.conversionCost) || 0; // ₹/bag
-    const bagWeight = parseFloat(inputs.bagWeight) || 0;   // g
+    const bagWeight = parseFloat(inputs.bagWeight) || 0;   // kg (Updated from g)
     const transportPerBag = parseFloat(inputs.transportPerBag) || 0; // ₹/bag
     const profitMargin = parseFloat(inputs.profitMargin) || 0; // %
 
     // --- Math Logic ---
-    const bagWeightKg = bagWeight / 1000;
+    const bagWeightKg = bagWeight; // Already in kg
 
     // 1. Costs per Bag
     const materialCostPerBag = ppRate * bagWeightKg;
@@ -78,7 +78,7 @@ export default function PricingCalculator({ inputs, onChange }) {
                         </div>
                     </label>
                     <label className="flex flex-col gap-2">
-                        <span className="text-text-muted text-xs font-medium uppercase tracking-wider">Bag Weight (g)</span>
+                        <span className="text-text-muted text-xs font-medium uppercase tracking-wider">Bag Weight (kg)</span>
                         <div className="relative">
                             <input
                                 className="w-full bg-slate-50 border border-border-light rounded-lg py-2.5 px-3 text-text-main placeholder-slate-400 focus:ring-1 focus:ring-primary focus:border-primary transition-all font-mono text-sm font-semibold"
@@ -86,9 +86,10 @@ export default function PricingCalculator({ inputs, onChange }) {
                                 name="bagWeight"
                                 value={inputs.bagWeight}
                                 onChange={onChange}
-                                placeholder="0"
+                                placeholder="0.000"
+                                step="0.001"
                             />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-medium">g</span>
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-medium">kg</span>
                         </div>
                     </label>
                 </div>

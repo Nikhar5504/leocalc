@@ -58,7 +58,7 @@ const Bales = ({ count, bWidth, bHeight, bDepth, vWidth, vHeight, vDepth }) => {
     );
 };
 
-// Container with clean edges
+// Container with clean, bold, transparent edges
 const Container = ({ width, height, depth }) => {
     const w = Math.max(width, 0.1);
     const h = Math.max(height, 0.1);
@@ -72,11 +72,18 @@ const Container = ({ width, height, depth }) => {
                 <meshStandardMaterial color="#e0f2fe" transparent opacity={0.1} depthWrite={false} side={2} />
             </mesh>
 
-            {/* Clean Outer Edges */}
+            {/* Clean Outer Edges - Bold & Transparent */}
             <mesh>
                 <boxGeometry args={[w, h, d]} />
                 <meshBasicMaterial transparent opacity={0} /> {/* Invisible mesh for edges */}
-                <Edges threshold={1} color="#0f172a" />
+                <Edges
+                    threshold={1}
+                    color="black"
+                    // Creating "Bold" effect
+                    linewidth={2}
+                >
+                    <meshBasicMaterial color="black" transparent opacity={0.4} />
+                </Edges>
             </mesh>
         </group>
     );
