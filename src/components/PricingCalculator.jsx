@@ -3,9 +3,10 @@ import { RefreshCw, DollarSign, TrendingUp, CheckCircle, Package } from 'lucide-
 
 export default function PricingCalculator({ inputs, onChange }) {
     // Parsing Inputs
+    // Parsing Inputs
     const ppRate = parseFloat(inputs.ppRate) || 0;         // ₹/kg
-    const conversionCost = parseFloat(inputs.conversionCost) || 0; // ₹/bag
-    const bagWeight = parseFloat(inputs.bagWeight) || 0;   // kg (Updated from g)
+    const conversionCost = parseFloat(inputs.conversionCost) || 0; // ₹/kg (Updated formula)
+    const bagWeight = parseFloat(inputs.bagWeight) || 0;   // kg
     const transportPerBag = parseFloat(inputs.transportPerBag) || 0; // ₹/bag
     const profitMargin = parseFloat(inputs.profitMargin) || 0; // %
 
@@ -13,19 +14,16 @@ export default function PricingCalculator({ inputs, onChange }) {
     const bagWeightKg = bagWeight; // Already in kg
 
     // 1. Costs per Bag
-    const materialCostPerBag = ppRate * bagWeightKg;
-    const effectiveConversionPerBag = conversionCost + transportPerBag;
-    const vendorCostPerBag = materialCostPerBag + effectiveConversionPerBag;
+    // Formula: (PP Rate + Conversion) * Weight + Transport
+    const baseRatePerKg = ppRate + conversionCost;
+    const materialAndConvCostPerBag = baseRatePerKg * bagWeightKg;
+    const vendorCostPerBag = materialAndConvCostPerBag + transportPerBag;
 
     // 2. Costs per Kg (for Stats)
-    const effectiveConversionPerKg = bagWeightKg > 0 ? effectiveConversionPerBag / bagWeightKg : 0;
-    // Note: The screenshot shows "Adj. Conversion /kg" and "Conversion Cost /kg".
-    // Usually one implies the "Cost" side and one implies "Revenue" side (Conversion Realization)?
-    // Or "Conversion Cost" meant just the input conversion per kg?
-    // Let's stick to Old Code logic:
-    // Old Code: adjustedConversion = conversionCost + transportPerBag  <-- Treated as scalar in old code? 
-    // BUT User inputs are now PER BAG.
-    // So "Adj. Conversion" (Cost side) = (Conv/bag + Trans/bag) / Weight.
+    // Effective Conversion/kg = Input Conversion + (Transport / Weight)
+    const transportPerKg = bagWeightKg > 0 ? transportPerBag / bagWeightKg : 0;
+    const effectiveConversionPerKg = conversionCost + transportPerKg;
+    // Adj. Conversion (Cost side)
     const adjConversionPerKg = effectiveConversionPerKg;
 
     // 3. Pricing
@@ -96,7 +94,7 @@ export default function PricingCalculator({ inputs, onChange }) {
 
                 <div className="grid grid-cols-2 gap-4">
                     <label className="flex flex-col gap-2">
-                        <span className="text-text-muted text-xs font-medium uppercase tracking-wider">Conv. Cost (₹/bag)</span>
+                        <span className="text-text-muted text-xs font-medium uppercase tracking-wider">Conv. Cost (₹/kg)</span>
                         <div className="relative">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-medium">₹</span>
                             <input
