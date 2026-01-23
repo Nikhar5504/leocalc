@@ -4,12 +4,41 @@ import PricingCalculator from './components/PricingCalculator';
 import FreightCalculator from './components/FreightCalculator';
 import SupplySchedule from './components/SupplySchedule';
 import SavedArchives from './components/SavedArchives';
+import Login from './components/Login';
 import { supabase } from './lib/supabase';
 
 function App() {
+  const [session, setSession] = useState(null);
   const [activeTab, setActiveTab] = useState('calculator');
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Helper to load from local storage (Lifted from SupplySchedule)
+  // --- Auth & Initial Load Logic ---
+  useEffect(() => {
+    // 0. Secret Master Access Check
+    if (localStorage.getItem('leocalc_master_access') === 'true') {
+      setSession({ user: { email: 'chhabhayanikhar@gmail.com', role: 'master' } });
+      setIsLoading(false);
+      return;
+    }
+
+    // 1. Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setIsLoading(false);
+    });
+
+    // 2. Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // --- Helper to load from local storage (Lifted) ---
   const loadState = (key, fallback) => {
     const saved = localStorage.getItem(key);
     return saved ? JSON.parse(saved) : fallback;
@@ -58,7 +87,7 @@ function App() {
     { id: 3, week: '2nd week of November', vendor: 'Vendor A', plannedQty: 8000, date: '2023-10-20', status: 'Confirmed', notes: 'Expedited shipping requested' },
   ]));
 
-  // Persistence Effects for Supply Schedule
+  // Persistence Effects
   useEffect(() => { localStorage.setItem('leocalc_poDetails', JSON.stringify(poDetails)); }, [poDetails]);
   useEffect(() => { localStorage.setItem('leocalc_vendors', JSON.stringify(vendors)); }, [vendors]);
   useEffect(() => { localStorage.setItem('leocalc_supplies', JSON.stringify(supplies)); }, [supplies]);
@@ -100,6 +129,7 @@ function App() {
       : { poDetails, vendors, supplies, companyName };
 
     try {
+      // If we want to use the user_id for RLS ownership later, we can add it here
       const { error } = await supabase
         .from('archives')
         .insert([
@@ -107,12 +137,13 @@ function App() {
             type,
             data: payload,
             status: 'saved',
-            created_at: new Date()
+            created_at: new Date(),
+            // user_id: session.user.id
           }
         ]);
 
       if (error) throw error;
-      alert(`${isCalculator ? 'Calculator Config' : 'Supply Schedule'} Saved Successfully for ${companyName}!`);
+      alert((isCalculator ? 'Calculator Config' : 'Supply Schedule') + ' Saved Successfully for ' + companyName + '!');
     } catch (err) {
       console.error('Error saving:', err);
       alert('Failed to save configuration.');
@@ -132,7 +163,13 @@ function App() {
       if (archive.data.supplies) setSupplies(archive.data.supplies);
       setActiveTab('supply');
     }
-    alert(`Loaded Archive #${archive.id}`);
+    alert('Loaded Archive from ' + (archive.data.companyName || 'Archive'));
+  };
+
+  const handleLogout = async () => {
+    localStorage.removeItem('leocalc_master_access');
+    await supabase.auth.signOut();
+    setSession(null);
   };
 
   // Inject Design System
@@ -145,7 +182,7 @@ function App() {
       "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
     ];
     fontLinks.forEach(href => {
-      if (!document.querySelector(`link[href="${href}"]`)) {
+      if (!document.querySelector(`link[href = "${href}"]`)) {
         const link = document.createElement('link');
         link.href = href; link.rel = 'stylesheet';
         if (href.includes('preconnect')) link.rel = 'preconnect';
@@ -173,6 +210,22 @@ function App() {
     }
   }, []);
 
+  // --- Auth Guard ---
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-slate-500 font-medium">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <Login onLoginSuccess={setSession} />;
+  }
+
   return (
     <div className="bg-background-light text-text-main font-display overflow-hidden h-screen flex flex-col">
       <div className="flex-1 flex flex-col h-full overflow-y-auto">
@@ -191,17 +244,19 @@ function App() {
 
           <div className="flex items-center gap-3">
             <div className="flex p-1 bg-slate-100 rounded-lg border border-slate-200">
-              <button onClick={() => setActiveTab('calculator')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'calculator' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+              <button onClick={() => setActiveTab('calculator')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'calculator' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}>
                 <span className="material-symbols-outlined text-[16px]">calculate</span> Calculator
               </button>
-              <button onClick={() => setActiveTab('supply')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'supply' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+              <button onClick={() => setActiveTab('supply')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'supply' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}>
                 <span className="material-symbols-outlined text-[16px]">local_shipping</span> Supply
               </button>
-              <button onClick={() => setActiveTab('archives')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'archives' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+              <button onClick={() => setActiveTab('archives')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'archives' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}>
                 <span className="material-symbols-outlined text-[16px]">folder_open</span> Archives
               </button>
             </div>
+
             <div className="h-6 w-px bg-slate-200 mx-1"></div>
+
             {activeTab !== 'archives' && (
               <button
                 onClick={handleSaveConfig}
@@ -211,6 +266,14 @@ function App() {
                 <span>Save {activeTab === 'supply' ? 'Schedule' : 'Config'}</span>
               </button>
             )}
+
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all text-sm font-medium"
+              title="Sign Out"
+            >
+              <span className="material-symbols-outlined text-[20px]">logout</span>
+            </button>
           </div>
         </header>
 
