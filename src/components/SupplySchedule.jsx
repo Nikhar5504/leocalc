@@ -158,21 +158,42 @@ export default function SupplySchedule({
 
     const generatePdfDocument = async (recipientName, statsOverride = null) => {
         const doc = new jsPDF();
-        // Placeholder images, assuming they exist or ignoring if not for now
-        // Code follows original logic
-        const logoFull = null; // await loadImage('/leopack-logo-white.png');
-        const logoIcon = null; // await loadImage('/leopack-logo-icon.png');
+
+        // Load Logo 
+        // Note: In Vite, files in public are served at root.
+        // We need to fetch it as blob/base64 to embed in jsPDF.
+        const logoUrl = window.location.origin + '/leopack_logo.png';
+        const logoImage = await loadImage(logoUrl);
 
         // Header
         doc.setFillColor(0, 0, 128); // Dark Blue
+        // Rounded Header Box? User said "do not remove the dark blue square... intact". 
+        // We keep the rect logic exactly as is.
         doc.rect(14, 15, 70, 24, 'F');
+
         doc.setFillColor(0, 200, 83); // Green Highlight
         doc.rect(84, 15, 2, 24, 'F');
 
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(16);
-        doc.setFont("helvetica", "bold");
-        doc.text("LEOPACK", 49, 30, { align: "center" });
+        // Logo Logic
+        if (logoImage) {
+            // Center the image in the blue box (x=14, w=70) -> Center x=49
+            // Box height 24.
+            // Let's assume aspect ratio fits. 
+            // We'll target width=50, height=auto centered.
+            const imgProps = doc.getImageProperties(logoImage);
+            const imgWidth = 50;
+            const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+            const yPos = 15 + (24 - imgHeight) / 2; // Vertically center
+            const xPos = 14 + (70 - imgWidth) / 2; // Horizontally center
+
+            doc.addImage(logoImage, 'PNG', xPos, yPos, imgWidth, imgHeight);
+        } else {
+            // Fallback if load fails
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(16);
+            doc.setFont("helvetica", "bold");
+            doc.text("LEOPACK", 49, 30, { align: "center" });
+        }
 
 
         doc.setTextColor(51, 65, 85);
@@ -184,7 +205,7 @@ export default function SupplySchedule({
         doc.setFillColor(248, 250, 252);
         doc.setDrawColor(226, 232, 240);
         const boxY = 55;
-        doc.roundedRect(14, boxY, 182, 35, 2, 2, 'FD');
+        doc.roundedRect(14, boxY, 182, 35, 3, 3, 'FD'); // Increased radius slightly
 
         doc.setFontSize(9);
         doc.setTextColor(71, 85, 105);
@@ -257,16 +278,49 @@ export default function SupplySchedule({
     const handleCustomerDownload = async () => {
         const doc = await generatePdfDocument(poDetails.customerName);
         const tableData = supplies.map(row => [row.week, row.date, "Leopack", Number(row.plannedQty).toLocaleString(), row.status]);
+
         autoTable(doc, {
             startY: 100,
             head: [['WEEK', 'SUPPLY DATE', 'SUPPLIER', 'PLANNED QTY', 'STATUS']],
             body: tableData,
-            theme: 'grid',
-            headStyles: { fillColor: [15, 23, 42], textColor: 255, fontSize: 8, fontStyle: 'bold' },
-            columnStyles: { 3: { halign: 'left', fontStyle: 'bold' } },
-            styles: { fontSize: 9, cellPadding: 3 },
+            theme: 'striped', // Modern look
+            headStyles: {
+                fillColor: [0, 0, 128], // Brand Dark Blue
+                textColor: 255,
+                fontSize: 9,
+                fontStyle: 'bold',
+                halign: 'center',
+                cellPadding: 6 // More breathing room
+            },
+            columnStyles: {
+                0: { halign: 'center' },
+                1: { halign: 'center' },
+                2: { halign: 'center' },
+                3: { halign: 'center', fontStyle: 'bold' },
+                4: { halign: 'center' }
+            },
+            styles: {
+                fontSize: 10,
+                cellPadding: 5,
+                valign: 'middle',
+                lineColor: [230, 230, 230],
+                lineWidth: 0
+            },
             alternateRowStyles: { fillColor: [248, 250, 252] },
+            // Modern Rounding Hack: Draw a rounded rect around the table
+            didDrawPage: (data) => {
+                const height = data.cursor.y - data.settings.startY;
+                // Only draw on the last page or if needed? 
+                // data.cursor.y is the Y position *after* the table.
+                // NOTE: This runs on every page. We might need logic if table spans multiple pages.
+                // For simplicity, we trust autoTable to look good, but we can add a border if desired.
+                // Let's rely on the clean 'striped' look + rounded headers if possible, 
+                // but jspdf-autotable doesn't support rounded headers easily.
+                // We will stick to the high-quality striped look which is aesthetically pleasing.
+            },
+            margin: { left: 14, right: 14 }
         });
+
         addPageNumbers(doc);
         doc.save(`Supply_Schedule_${poDetails.customerName || 'Customer'}.pdf`);
     };
@@ -287,11 +341,30 @@ export default function SupplySchedule({
             startY: 100,
             head: [['WEEK', 'EXPECTED DATE', 'PLANNED QTY', 'STATUS']],
             body: tableData,
-            theme: 'grid',
-            headStyles: { fillColor: [15, 23, 42], textColor: 255, fontSize: 8, fontStyle: 'bold' },
-            columnStyles: { 2: { halign: 'left', fontStyle: 'bold' } },
-            styles: { fontSize: 9, cellPadding: 3, valign: 'middle' },
+            theme: 'striped',
+            headStyles: {
+                fillColor: [0, 0, 128],
+                textColor: 255,
+                fontSize: 9,
+                fontStyle: 'bold',
+                halign: 'center',
+                cellPadding: 6
+            },
+            columnStyles: {
+                0: { halign: 'center' },
+                1: { halign: 'center' },
+                2: { halign: 'center', fontStyle: 'bold' },
+                3: { halign: 'center' }
+            },
+            styles: {
+                fontSize: 10,
+                cellPadding: 5,
+                valign: 'middle',
+                lineColor: [230, 230, 230],
+                lineWidth: 0
+            },
             alternateRowStyles: { fillColor: [248, 250, 252] },
+            margin: { left: 14, right: 14 }
         });
         addPageNumbers(doc);
         doc.save(`Supply_Schedule_${vendorName}.pdf`);
