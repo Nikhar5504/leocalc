@@ -5,12 +5,19 @@ import FreightCalculator from './components/FreightCalculator';
 import SupplySchedule from './components/SupplySchedule';
 import SavedArchives from './components/SavedArchives';
 import Login from './components/Login';
+import QuantitiesDashboard from './components/QuantitiesDashboard';
 import { supabase } from './lib/supabase';
 
 function App() {
   const [session, setSession] = useState(null);
   const [activeTab, setActiveTab] = useState('calculator');
   const [isLoading, setIsLoading] = useState(true);
+  const [toast, setToast] = useState({ show: false, message: '' });
+
+  const showToast = (message) => {
+    setToast({ show: true, message });
+    setTimeout(() => setToast({ show: false, message: '' }), 2000);
+  };
 
   // --- Auth & Initial Load Logic ---
   useEffect(() => {
@@ -87,10 +94,17 @@ function App() {
     { id: 3, week: '2nd week of November', vendor: 'Vendor A', plannedQty: 8000, date: '2023-10-20', status: 'Confirmed', notes: 'Expedited shipping requested' },
   ]));
 
+  const [products, setProducts] = useState(() => loadState('leocalc_products', [
+    { id: 1, name: 'Widget A - Standard', qty: 100, vendorCost: 500, customerPrice: 750 },
+    { id: 2, name: 'Widget B - Premium', qty: 50, vendorCost: 200, customerPrice: 400 },
+    { id: 3, name: 'Widget C - Economy', qty: 200, vendorCost: 150, customerPrice: 180 },
+  ]));
+
   // Persistence Effects
   useEffect(() => { localStorage.setItem('leocalc_poDetails', JSON.stringify(poDetails)); }, [poDetails]);
   useEffect(() => { localStorage.setItem('leocalc_vendors', JSON.stringify(vendors)); }, [vendors]);
   useEffect(() => { localStorage.setItem('leocalc_supplies', JSON.stringify(supplies)); }, [supplies]);
+  useEffect(() => { localStorage.setItem('leocalc_products', JSON.stringify(products)); }, [products]);
 
 
   const handlePricingChange = (e) => {
@@ -111,42 +125,54 @@ function App() {
     }
 
     const isCalculator = activeTab === 'calculator';
+    const isSupply = activeTab === 'supply';
+    const isQuantities = activeTab === 'quantities';
 
     // Prompt for Company Name (Mandatory)
-    // For Supply, default to the customer name in state
-    const defaultName = isCalculator ? '' : (poDetails.customerName || '');
+    let defaultName = '';
+    if (isCalculator) defaultName = '';
+    if (isSupply) defaultName = poDetails.customerName || '';
+    if (isQuantities) defaultName = 'Product Analysis';
+
     const companyName = window.prompt("Enter Company Name for this Archive (Mandatory):", defaultName);
 
     if (!companyName || companyName.trim() === "") {
-      alert("Company Name is required to save.");
+      showToast("Company Name is required to save.");
       return;
     }
 
-    const type = isCalculator ? 'calculator' : 'schedule';
-    // Construct Data Payload based on active tab
-    const payload = isCalculator
-      ? { pricing: pricingInputs, freight: freightInputs, companyName }
-      : { poDetails, vendors, supplies, companyName };
+    let type = 'calculator';
+    let payload = {};
+
+    if (isCalculator) {
+      type = 'calculator';
+      payload = { pricing: pricingInputs, freight: freightInputs, companyName };
+    } else if (isSupply) {
+      type = 'schedule';
+      payload = { poDetails, vendors, supplies, companyName };
+    } else if (isQuantities) {
+      type = 'quantities';
+      payload = { products, companyName };
+    }
 
     try {
-      // If we want to use the user_id for RLS ownership later, we can add it here
       const { error } = await supabase
         .from('archives')
         .insert([
           {
             type,
             data: payload,
+            company_name: companyName, // Explicitly sending for column population
             status: 'saved',
             created_at: new Date(),
-            // user_id: session.user.id
           }
         ]);
 
       if (error) throw error;
-      alert((isCalculator ? 'Calculator Config' : 'Supply Schedule') + ' Saved Successfully for ' + companyName + '!');
+      showToast(`Saved Successfully for ${companyName}!`);
     } catch (err) {
       console.error('Error saving:', err);
-      alert('Failed to save configuration.');
+      showToast(`Save Error: ${err.message || 'Unknown error'}`);
     }
   };
 
@@ -162,8 +188,11 @@ function App() {
       if (archive.data.vendors) setVendors(archive.data.vendors);
       if (archive.data.supplies) setSupplies(archive.data.supplies);
       setActiveTab('supply');
+    } else if (archive.type === 'quantities') {
+      if (archive.data.products) setProducts(archive.data.products);
+      setActiveTab('quantities');
     }
-    alert('Loaded Archive from ' + (archive.data.companyName || 'Archive'));
+    showToast('Loaded Archive: ' + (archive.data.companyName || 'Archive'));
   };
 
   const handleLogout = async () => {
@@ -197,7 +226,6 @@ function App() {
       script.onload = () => {
         if (window.tailwind) {
           window.tailwind.config = {
-            darkMode: "class",
             theme: {
               extend: {
                 colors: { "primary": "#1152d4", "background-light": "#f8fafc", "text-main": "#0f172a", "text-muted": "#64748b" },
@@ -250,6 +278,9 @@ function App() {
               <button onClick={() => setActiveTab('supply')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'supply' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}>
                 <span className="material-symbols-outlined text-[16px]">local_shipping</span> Supply
               </button>
+              <button onClick={() => setActiveTab('quantities')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'quantities' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}>
+                <span className="material-symbols-outlined text-[16px]">calculate</span> Quantities
+              </button>
               <button onClick={() => setActiveTab('archives')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'archives' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}>
                 <span className="material-symbols-outlined text-[16px]">folder_open</span> Archives
               </button>
@@ -277,29 +308,50 @@ function App() {
           </div>
         </header>
 
-        {/* Content Body */}
-        <div className="p-6 flex flex-col gap-6 max-w-[1600px] mx-auto w-full flex-1">
-          {activeTab === 'calculator' ? (
-            <>
-              <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-                <PricingCalculator inputs={pricingInputs} onChange={handlePricingChange} />
-              </div>
-              <div className="flex flex-col gap-4">
-                <h3 className="text-text-main text-lg font-bold px-1">Freight & Loading Optimization</h3>
-                <FreightCalculator inputs={freightInputs} onChange={handleFreightChange} bagWeight={pricingInputs.bagWeight} />
-              </div>
-            </>
-          ) : activeTab === 'supply' ? (
-            <SupplySchedule
-              // Pass Lifted State
-              poDetails={poDetails} setPoDetails={setPoDetails}
-              vendors={vendors} setVendors={setVendors}
-              supplies={supplies} setSupplies={setSupplies}
-            />
-          ) : (
-            <SavedArchives onLoad={handleLoadArchive} />
-          )}
+        {/* Content Body with Rounded Box Style */}
+        <div className="p-6 flex flex-col gap-6 max-w-[1600px] mx-auto w-full flex-1 mb-10">
+          <div className="bg-white border border-border-light rounded-2xl shadow-sm overflow-hidden flex flex-col flex-1 p-6 md:p-8 animate-fade-in">
+            {activeTab === 'calculator' ? (
+              <>
+                {/* Page Heading & Actions (Standardized) */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-2">
+                  <div className="flex flex-col gap-2">
+                    <h1 className="text-slate-900 text-3xl md:text-4xl font-black leading-tight tracking-tight">Costing Engine</h1>
+                    <p className="text-slate-500 text-base font-normal">Unit economics, logistics optimization & margin analysis</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mt-4">
+                  <PricingCalculator inputs={pricingInputs} onChange={handlePricingChange} />
+                </div>
+                <div className="flex flex-col gap-4 mt-8">
+                  <h3 className="text-text-main text-lg font-bold px-1">Freight & Loading Optimization</h3>
+                  <FreightCalculator inputs={freightInputs} onChange={handleFreightChange} bagWeight={pricingInputs.bagWeight} />
+                </div>
+              </>
+            ) : activeTab === 'supply' ? (
+              <SupplySchedule
+                poDetails={poDetails} setPoDetails={setPoDetails}
+                vendors={vendors} setVendors={setVendors}
+                supplies={supplies} setSupplies={setSupplies}
+              />
+            ) : activeTab === 'quantities' ? (
+              <QuantitiesDashboard products={products} setProducts={setProducts} />
+            ) : (
+              <SavedArchives onLoad={handleLoadArchive} />
+            )}
+          </div>
         </div>
+
+        {/* Toast Notification */}
+        {toast.show && (
+          <div className="fixed bottom-6 right-6 z-[9999] animate-fade-in">
+            <div className="bg-slate-900 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-slate-700">
+              <span className="material-symbols-outlined text-emerald-400">check_circle</span>
+              <span className="text-sm font-bold">{toast.message}</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
