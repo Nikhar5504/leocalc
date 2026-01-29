@@ -142,7 +142,7 @@ export default function SupplySchedule({
 
         doc.setFillColor(248, 250, 252);
         const boxY = 55;
-        doc.roundedRect(14, boxY, 182, 35, 3, 3, 'FD');
+        doc.roundedRect(14, boxY, 182, 35, 3, 3, 'F');
 
         doc.setFontSize(9);
         const recipientLabel = statsOverride ? "VENDOR:" : "CUSTOMER:";
@@ -194,8 +194,17 @@ export default function SupplySchedule({
             styles: { fontSize: 10, cellPadding: 4, lineWidth: 0 }, alternateRowStyles: { fillColor: [248, 250, 252] }, margin: { horizontal: 14 }
         });
         addPageNumbers(doc);
-        const fileName = "Supply_Schedule_" + (poDetails.customerName || "Customer") + ".pdf";
-        doc.save(fileName);
+        const safeName = (poDetails.customerName || "Customer").replace(/[^a-z0-9]/gi, '_');
+        const fileName = `Supply_Schedule_${safeName}.pdf`;
+        const blob = doc.output('blob');
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     };
 
     const handleVendorDownload = async (vendorName) => {
@@ -212,7 +221,17 @@ export default function SupplySchedule({
             styles: { fontSize: 10, cellPadding: 4, lineWidth: 0 }, alternateRowStyles: { fillColor: [248, 250, 252] }, margin: { horizontal: 14 }
         });
         addPageNumbers(doc);
-        doc.save("Supply_Schedule_" + vendorName + ".pdf");
+        const safeVendor = vendorName.replace(/[^a-z0-9]/gi, '_');
+        const fileName = `Supply_Schedule_${safeVendor}.pdf`;
+        const blob = doc.output('blob');
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
         setShowVendorExportModal(false);
     };
 
@@ -284,26 +303,51 @@ export default function SupplySchedule({
                             {supplies.map(row => (
                                 <tr key={row.id} className="hover:bg-slate-50 transition-colors group">
                                     <td className="px-6 py-3">
-                                        <select value={row.vendor} onChange={e => updateSupply(row.id, 'vendor', e.target.value)} className="w-full bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0">
+                                        <select
+                                            value={row.vendor}
+                                            onChange={e => updateSupply(row.id, 'vendor', e.target.value)}
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
+                                        >
                                             {vendors.map(v => <option key={v.name} value={v.name}>{v.name}</option>)}
                                         </select>
                                     </td>
                                     <td className="px-6 py-3">
-                                        <input type="date" value={row.date} onChange={e => updateSupply(row.id, 'date', e.target.value)} className="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0" />
+                                        <input
+                                            type="date"
+                                            value={row.date}
+                                            onChange={e => updateSupply(row.id, 'date', e.target.value)}
+                                            className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono"
+                                        />
                                     </td>
                                     <td className="px-6 py-3">
-                                        <input type="number" value={row.plannedQty} onChange={e => updateSupply(row.id, 'plannedQty', e.target.value)} className="w-full text-right bg-transparent border-none text-sm font-black text-slate-800 focus:ring-0" />
+                                        <input
+                                            type="number"
+                                            value={row.plannedQty}
+                                            onChange={e => updateSupply(row.id, 'plannedQty', e.target.value)}
+                                            className="w-full text-right bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-black text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono"
+                                        />
                                     </td>
                                     <td className="px-6 py-3">
-                                        <select value={row.status} onChange={e => updateSupply(row.id, 'status', e.target.value)} className="bg-transparent text-[10px] font-black uppercase border-none focus:ring-0 cursor-pointer" style={{ color: row.status === 'Confirmed' ? '#16a34a' : row.status === 'Pending' ? '#d97706' : '#64748b' }}>
+                                        <select
+                                            value={row.status}
+                                            onChange={e => updateSupply(row.id, 'status', e.target.value)}
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[11px] font-black uppercase tracking-wide focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
+                                            style={{ color: row.status === 'Confirmed' ? '#16a34a' : row.status === 'Pending' ? '#d97706' : '#64748b' }}
+                                        >
                                             <option value="Planned">Planned</option><option value="Confirmed">Confirmed</option><option value="In Transit">In Transit</option><option value="Received">Received</option><option value="Draft">Draft</option>
                                         </select>
                                     </td>
                                     <td className="px-6 py-3">
-                                        <input type="text" value={row.notes || ''} placeholder="Notes..." onChange={e => updateSupply(row.id, 'notes', e.target.value)} className="w-full bg-transparent border-none text-xs font-medium text-slate-500 focus:ring-0" />
+                                        <input
+                                            type="text"
+                                            value={row.notes || ''}
+                                            placeholder="Add notes..."
+                                            onChange={e => updateSupply(row.id, 'notes', e.target.value)}
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-600 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400"
+                                        />
                                     </td>
                                     <td className="px-4 py-3">
-                                        <button onClick={() => deleteSupplyRow(row.id)} className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><span className="material-symbols-outlined text-[18px]">delete</span></button>
+                                        <button onClick={() => deleteSupplyRow(row.id)} className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-red-50 rounded-lg"><span className="material-symbols-outlined text-[20px]">delete</span></button>
                                     </td>
                                 </tr>
                             ))}

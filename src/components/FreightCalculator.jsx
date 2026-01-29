@@ -56,14 +56,14 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
             <label className="text-text-muted text-xs font-medium uppercase tracking-wider block mb-1.5">{label}</label>
             <div className="flex rounded-lg shadow-sm">
                 <input
-                    className="block w-full rounded-l-lg border border-r-0 border-border-light bg-slate-50 text-sm text-text-main focus:ring-primary focus:border-primary py-2.5 px-3 font-mono font-semibold"
+                    className="block w-full rounded-l-lg border border-r-0 border-slate-200 bg-slate-50 text-sm text-text-main focus:ring-primary focus:border-primary py-2.5 px-3 font-mono font-semibold"
                     type="number"
                     name={name}
                     value={inputs[name]}
                     onChange={onChange}
                     placeholder="0"
                 />
-                <div className="rounded-r-lg border border-l-0 border-border-light bg-slate-100 text-xs font-bold text-slate-500 py-2.5 px-3 flex items-center justify-center min-w-[3rem]">
+                <div className="rounded-r-lg border border-l-0 border-slate-200 bg-slate-100 text-xs font-bold text-slate-500 py-2.5 px-3 flex items-center justify-center min-w-[3rem]">
                     {unit.toUpperCase()}
                 </div>
             </div>
@@ -74,8 +74,8 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 h-full min-h-[420px]">
 
             {/* Left Col: Config (Span 1) */}
-            <div className="bg-white border border-border-light rounded-xl p-6 flex flex-col gap-5 shadow-sm h-full overflow-y-auto">
-                <div className="flex items-center justify-between mb-1 pb-4 border-b border-border-light">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col gap-5 shadow-sm h-full overflow-y-auto">
+                <div className="flex items-center justify-between mb-1 pb-4 border-b border-slate-200">
                     <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-primary">local_shipping</span>
                         <h4 className="text-text-main font-semibold">Freight Configuration</h4>
@@ -89,7 +89,7 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
                             name="unit"
                             value={unit}
                             onChange={onChange}
-                            className="bg-slate-50 border border-border-light rounded px-2 py-1 text-xs text-text-main font-bold focus:ring-1 focus:ring-primary focus:border-primary"
+                            className="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-xs text-text-main font-bold focus:ring-1 focus:ring-primary focus:border-primary"
                         >
                             <option value="m">Meters (M)</option>
                             <option value="ft">Feet (FT)</option>
@@ -119,7 +119,7 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
                     <label className="flex flex-col gap-2">
                         <span className="text-text-muted text-xs font-medium uppercase tracking-wider">Pallet Capacity (Pcs)</span>
                         <input
-                            className="w-full bg-slate-50 border border-border-light rounded-lg py-2.5 px-3 text-text-main placeholder-slate-400 focus:ring-1 focus:ring-primary focus:border-primary font-mono text-sm font-semibold"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-3 text-text-main placeholder-slate-400 focus:ring-1 focus:ring-primary focus:border-primary font-mono text-sm font-semibold"
                             type="number"
                             name="palletCapacity"
                             value={palletCapacity}
@@ -139,21 +139,21 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
                                 value={efficiency}
                                 onChange={onChange}
                             />
-                            <span className="bg-slate-50 border border-border-light rounded px-2 py-1 text-text-main font-mono text-sm w-12 text-center font-bold">{efficiency}%</span>
+                            <span className="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-text-main font-mono text-sm w-12 text-center font-bold">{efficiency}%</span>
                         </div>
                     </label>
                     <label className="flex flex-col gap-2">
                         <span className="text-text-muted text-xs font-medium uppercase tracking-wider">Total Freight Cost</span>
                         <div className="flex rounded-lg shadow-sm">
                             <input
-                                className="block w-full rounded-l-lg border border-r-0 border-border-light bg-slate-50 text-sm text-text-main focus:ring-primary focus:border-primary py-2.5 px-3 font-mono font-semibold"
+                                className="block w-full rounded-l-lg border border-r-0 border-slate-200 bg-slate-50 text-sm text-text-main focus:ring-primary focus:border-primary py-2.5 px-3 font-mono font-semibold"
                                 type="number"
                                 name="freightCharge"
                                 value={freightCharge}
                                 onChange={onChange}
                                 placeholder="0"
                             />
-                            <div className="rounded-r-lg border border-l-0 border-border-light bg-slate-100 text-xs font-bold text-slate-500 py-2.5 px-3 flex items-center justify-center min-w-[3rem]">
+                            <div className="rounded-r-lg border border-l-0 border-slate-200 bg-slate-100 text-xs font-bold text-slate-500 py-2.5 px-3 flex items-center justify-center min-w-[3rem]">
                                 INR
                             </div>
                         </div>
@@ -162,7 +162,7 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
             </div>
 
             {/* Right Col: Visualizer (Span 2) */}
-            <div className="xl:col-span-2 bg-white border border-border-light rounded-xl p-1 flex flex-col relative overflow-hidden shadow-sm h-full min-h-[400px]">
+            <div className="xl:col-span-2 bg-white border border-slate-200 rounded-xl p-1 flex flex-col relative overflow-hidden shadow-sm h-full min-h-[400px]">
 
                 <div className="absolute top-4 right-4 z-10 flex gap-2">
                     <button className="bg-primary hover:bg-primary/90 text-white rounded-lg p-2 transition-colors shadow-md flex items-center justify-center">
@@ -191,7 +191,7 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
                 </div>
 
                 {/* Footer Stats - REPLACEMENT as requested */}
-                <div className="h-20 bg-white border-t border-border-light flex flex-col justify-center px-6 rounded-b-lg">
+                <div className="h-20 bg-white border-t border-slate-200 flex flex-col justify-center px-6 rounded-b-lg">
                     <div className="flex flex-wrap gap-x-8 gap-y-2 justify-between items-center w-full">
 
                         {/* Total Pallets (Physical) */}

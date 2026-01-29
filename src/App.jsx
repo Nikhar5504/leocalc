@@ -266,7 +266,10 @@ function App() {
               <span className="text-text-main font-medium capitalize">{activeTab} Dashboard</span>
             </div>
             <h2 className="text-text-main text-xl font-bold tracking-tight">
-              {activeTab === 'calculator' ? 'Costing & Logistics Engine' : activeTab === 'supply' ? 'Production & Supply Planning' : 'Archives & Records'}
+              {activeTab === 'calculator' ? 'Costing & Logistics Engine' :
+                activeTab === 'supply' ? 'Production & Supply Planning' :
+                  activeTab === 'quantities' ? 'Quantities & Margin Analysis' :
+                    'Archives & Records'}
             </h2>
           </div>
 
