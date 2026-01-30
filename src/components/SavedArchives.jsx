@@ -139,6 +139,25 @@ export default function SavedArchives({ onLoad }) {
                                     );
                                 })}
                             </div>
+                            {calcTotalPages > 1 && (
+                                <div className="flex justify-center items-center gap-4 mt-8">
+                                    <button
+                                        onClick={() => setCurrentPageCalc(p => Math.max(1, p - 1))}
+                                        disabled={currentPageCalc === 1}
+                                        className="p-2 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                    >
+                                        <span className="material-symbols-outlined text-slate-500">chevron_left</span>
+                                    </button>
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Page {currentPageCalc} of {calcTotalPages}</span>
+                                    <button
+                                        onClick={() => setCurrentPageCalc(p => Math.min(calcTotalPages, p + 1))}
+                                        disabled={currentPageCalc === calcTotalPages}
+                                        className="p-2 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                    >
+                                        <span className="material-symbols-outlined text-slate-500">chevron_right</span>
+                                    </button>
+                                </div>
+                            )}
                         </section>
                     )}
 
@@ -174,6 +193,25 @@ export default function SavedArchives({ onLoad }) {
                                     );
                                 })}
                             </div>
+                            {schedTotalPages > 1 && (
+                                <div className="flex justify-center items-center gap-4 mt-8">
+                                    <button
+                                        onClick={() => setCurrentPageSched(p => Math.max(1, p - 1))}
+                                        disabled={currentPageSched === 1}
+                                        className="p-2 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                    >
+                                        <span className="material-symbols-outlined text-slate-500">chevron_left</span>
+                                    </button>
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Page {currentPageSched} of {schedTotalPages}</span>
+                                    <button
+                                        onClick={() => setCurrentPageSched(p => Math.min(schedTotalPages, p + 1))}
+                                        disabled={currentPageSched === schedTotalPages}
+                                        className="p-2 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                    >
+                                        <span className="material-symbols-outlined text-slate-500">chevron_right</span>
+                                    </button>
+                                </div>
+                            )}
                         </section>
                     )}
 
@@ -209,6 +247,25 @@ export default function SavedArchives({ onLoad }) {
                                     );
                                 })}
                             </div>
+                            {quantTotalPages > 1 && (
+                                <div className="flex justify-center items-center gap-4 mt-8">
+                                    <button
+                                        onClick={() => setCurrentPageQuant(p => Math.max(1, p - 1))}
+                                        disabled={currentPageQuant === 1}
+                                        className="p-2 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                    >
+                                        <span className="material-symbols-outlined text-slate-500">chevron_left</span>
+                                    </button>
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Page {currentPageQuant} of {quantTotalPages}</span>
+                                    <button
+                                        onClick={() => setCurrentPageQuant(p => Math.min(quantTotalPages, p + 1))}
+                                        disabled={currentPageQuant === quantTotalPages}
+                                        className="p-2 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                    >
+                                        <span className="material-symbols-outlined text-slate-500">chevron_right</span>
+                                    </button>
+                                </div>
+                            )}
                         </section>
                     )}
 
