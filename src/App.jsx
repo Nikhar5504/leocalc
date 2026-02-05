@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Truck, Calculator, Calendar } from 'lucide-react';
 import PricingCalculator from './components/PricingCalculator';
 import FreightCalculator from './components/FreightCalculator';
 import SupplySchedule from './components/SupplySchedule';

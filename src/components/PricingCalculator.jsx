@@ -10,12 +10,10 @@ export default function PricingCalculator({ inputs, onChange }) {
     const profitMargin = parseFloat(inputs.profitMargin) || 0;
 
     const bagWeightKg = bagWeight;
-    const baseRatePerKg = ppRate + conversionCost;
-    const materialAndConvCostPerBag = baseRatePerKg * bagWeightKg;
-    const vendorCostPerBag = materialAndConvCostPerBag + transportPerBag;
+    const vendorCostPerBag = (ppRate + transportPerBag + conversionCost) * bagWeight;
 
     const transportPerKg = bagWeightKg > 0 ? transportPerBag / bagWeightKg : 0;
-    const adjConversionPerKg = conversionCost + transportPerKg;
+    const adjConversionPerKg = conversionCost + transportPerBag;
 
     const bagPrice = vendorCostPerBag * (1 + profitMargin / 100);
     const netProfit = bagPrice - vendorCostPerBag;
@@ -78,7 +76,7 @@ export default function PricingCalculator({ inputs, onChange }) {
                         <span className="text-slate-700 text-xs font-black uppercase tracking-[0.15em]">Profit Margin (%)</span>
                         <div className="bg-primary/10 px-3 py-1 rounded-full"><span className="text-primary font-black text-xs font-mono">{inputs.profitMargin}%</span></div>
                     </div>
-                    <input className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-primary" type="range" name="profitMargin" min="0" max="100" value={inputs.profitMargin > 100 ? 100 : inputs.profitMargin} onChange={onChange} />
+                    <input className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-primary" type="range" name="profitMargin" min="0" max="500" value={inputs.profitMargin} onChange={onChange} />
                 </div>
             </div>
 
@@ -94,7 +92,7 @@ export default function PricingCalculator({ inputs, onChange }) {
                     </div>
                     <div className="mt-4 pt-4 border-t border-white/20">
                         <p className="text-indigo-200 text-xs font-bold mb-1">Adj. Conversion</p>
-                        <p className="text-white font-bold font-mono text-xl">{fmtNum(adjConversionPerKg)} <span className="text-sm font-normal opacity-80">/kg</span></p>
+                        <p className="text-white font-bold font-mono text-xl">{fmtNum(adjConversionPerKg)}</p>
                     </div>
                 </div>
 
