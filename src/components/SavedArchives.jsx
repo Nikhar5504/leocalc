@@ -128,8 +128,14 @@ export default function SavedArchives({ onLoad }) {
                                             </div>
                                             <div className="mt-auto pt-4 border-t border-slate-50 flex justify-between items-end">
                                                 <div className="flex flex-col">
-                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">PP Rate</span>
-                                                    <span className="text-sm font-black text-slate-900">₹{p.ppRate}</span>
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Bag Price</span>
+                                                    <span className="text-sm font-black text-slate-900">
+                                                        {(() => {
+                                                            const vendorCost = (Number(p.ppRate) + Number(p.transportPerBag) + Number(p.conversionCost)) * Number(p.bagWeight);
+                                                            const price = vendorCost * (1 + (Number(p.profitMargin) / 100));
+                                                            return price.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+                                                        })()}
+                                                    </span>
                                                 </div>
                                                 <button onClick={(e) => deleteArchive(a.id, e)} className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100">
                                                     <span className="material-symbols-outlined text-[18px]">delete</span>
@@ -236,8 +242,10 @@ export default function SavedArchives({ onLoad }) {
                                             </div>
                                             <div className="mt-auto pt-4 border-t border-slate-50 flex justify-between items-end">
                                                 <div className="flex flex-col">
-                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Sales</span>
-                                                    <span className="text-sm font-black text-slate-900">{prods.reduce((s, p) => s + (Number(p.qty) || 0), 0).toLocaleString()} Units</span>
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Est. Net Profit</span>
+                                                    <span className="text-sm font-black text-slate-900 text-emerald-600">
+                                                        {prods.reduce((s, p) => s + ((Number(p.customerPrice) - Number(p.vendorCost)) * (Number(p.qty) || 0)), 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
+                                                    </span>
                                                 </div>
                                                 <button onClick={(e) => deleteArchive(a.id, e)} className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100">
                                                     <span className="material-symbols-outlined text-[18px]">delete</span>
