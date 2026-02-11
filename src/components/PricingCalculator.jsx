@@ -74,7 +74,17 @@ export default function PricingCalculator({ inputs, onChange }) {
                 <div className="mt-auto pt-6 border-t border-slate-100">
                     <div className="flex justify-between items-center mb-4">
                         <span className="text-slate-700 text-xs font-black uppercase tracking-[0.15em]">Profit Margin (%)</span>
-                        <div className="bg-primary/10 px-3 py-1 rounded-full"><span className="text-primary font-black text-xs font-mono">{inputs.profitMargin}%</span></div>
+                        <div className="bg-primary/10 px-2 py-1 rounded-lg flex items-center">
+                            <input
+                                className="w-16 bg-transparent text-right text-primary font-black text-xs font-mono border-none p-0 focus:ring-0"
+                                type="number"
+                                name="profitMargin"
+                                value={inputs.profitMargin}
+                                onChange={onChange}
+                                step="0.5"
+                            />
+                            <span className="text-primary font-black text-xs font-mono ml-1">%</span>
+                        </div>
                     </div>
                     <input className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-primary" type="range" name="profitMargin" min="0" max="500" value={inputs.profitMargin} onChange={onChange} />
                 </div>

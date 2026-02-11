@@ -13,6 +13,13 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState({ show: false, message: '' });
 
+  // Save Modal State
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [existingCompanies, setExistingCompanies] = useState([]);
+  const [saveModalConfig, setSaveModalConfig] = useState({ type: '', payload: {}, defaultName: '' });
+  const [selectedCompany, setSelectedCompany] = useState('');
+  const [newCompanyInput, setNewCompanyInput] = useState('');
+
   const showToast = (message) => {
     setToast({ show: true, message });
     setTimeout(() => setToast({ show: false, message: '' }), 2000);
@@ -117,6 +124,7 @@ function App() {
   };
 
   // --- Save / Load Logic ---
+  // --- Save / Load Logic ---
   const handleSaveConfig = async () => {
     if (!supabase) {
       alert('Supabase not configured. Check console.');
@@ -127,41 +135,60 @@ function App() {
     const isSupply = activeTab === 'supply';
     const isQuantities = activeTab === 'quantities';
 
-    // Prompt for Company Name (Mandatory)
     let defaultName = '';
-    if (isCalculator) defaultName = '';
     if (isSupply) defaultName = poDetails.customerName || '';
     if (isQuantities) defaultName = 'Product Analysis';
-
-    const companyName = window.prompt("Enter Company Name for this Archive (Mandatory):", defaultName);
-
-    if (!companyName || companyName.trim() === "") {
-      showToast("Company Name is required to save.");
-      return;
-    }
 
     let type = 'calculator';
     let payload = {};
 
     if (isCalculator) {
       type = 'calculator';
-      payload = { pricing: pricingInputs, freight: freightInputs, companyName };
+      payload = { pricing: pricingInputs, freight: freightInputs };
     } else if (isSupply) {
       type = 'schedule';
-      payload = { poDetails, vendors, supplies, companyName };
+      payload = { poDetails, vendors, supplies };
     } else if (isQuantities) {
       type = 'quantities';
-      payload = { products, companyName };
+      payload = { products };
     }
+
+    // Fetch existing companies
+    try {
+      const { data, error } = await supabase.from('archives').select('company_name');
+      if (!error && data) {
+        const unique = [...new Set(data.map(i => i.company_name).filter(Boolean))].sort();
+        setExistingCompanies(unique);
+      }
+    } catch (e) { console.error(e); }
+
+    setSaveModalConfig({ type, payload, defaultName });
+    setSelectedCompany('');
+    setNewCompanyInput(defaultName);
+    setShowSaveModal(true);
+  };
+
+  const confirmSave = async () => {
+    const companyName = selectedCompany === 'NEW_COMPANY_OPTION' ? newCompanyInput : selectedCompany;
+
+    if (!companyName || companyName.trim() === "") {
+      showToast("Company Name is required.");
+      return;
+    }
+
+    console.log('Saving to company:', companyName); // Debug
+
+    // Update payload with company name if needed for internal consistency (though DB col is distinct)
+    const finalPayload = { ...saveModalConfig.payload, companyName };
 
     try {
       const { error } = await supabase
         .from('archives')
         .insert([
           {
-            type,
-            data: payload,
-            company_name: companyName, // Explicitly sending for column population
+            type: saveModalConfig.type,
+            data: finalPayload,
+            company_name: companyName,
             status: 'saved',
             created_at: new Date(),
           }
@@ -169,11 +196,14 @@ function App() {
 
       if (error) throw error;
       showToast(`Saved Successfully for ${companyName}!`);
+      setShowSaveModal(false);
     } catch (err) {
       console.error('Error saving:', err);
       showToast(`Save Error: ${err.message || 'Unknown error'}`);
     }
   };
+
+
 
   const handleLoadArchive = (archive) => {
     if (!archive || !archive.data) return;
@@ -344,6 +374,59 @@ function App() {
             )}
           </div>
         </div>
+
+        {/* Save Modal */}
+        {showSaveModal && (
+          <div className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
+              <div className="p-6 border-b border-gray-100">
+                <h3 className="text-xl font-bold text-slate-900">Save Configuration</h3>
+                <p className="text-sm text-slate-500 mt-1">Select an existing company or add a new one.</p>
+              </div>
+              <div className="p-6 flex flex-col gap-4">
+                <label className="flex flex-col gap-2">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Select Company</span>
+                  <select
+                    className="form-select rounded-lg border-slate-200 bg-slate-50 text-sm font-medium focus:ring-primary focus:border-primary"
+                    value={selectedCompany}
+                    onChange={(e) => setSelectedCompany(e.target.value)}
+                  >
+                    <option value="" disabled>-- Choose a Company --</option>
+                    {existingCompanies.map(c => <option key={c} value={c}>{c}</option>)}
+                    <option value="NEW_COMPANY_OPTION">+ Add New Company</option>
+                  </select>
+                </label>
+
+                {selectedCompany === 'NEW_COMPANY_OPTION' && (
+                  <label className="flex flex-col gap-2 animate-fade-in">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">New Company Name</span>
+                    <input
+                      className="form-input rounded-lg border-slate-200 text-sm font-medium focus:ring-primary focus:border-primary"
+                      placeholder="Enter company name..."
+                      value={newCompanyInput}
+                      onChange={(e) => setNewCompanyInput(e.target.value)}
+                      autoFocus
+                    />
+                  </label>
+                )}
+              </div>
+              <div className="p-4 bg-gray-50 flex justify-end gap-3">
+                <button
+                  onClick={() => setShowSaveModal(false)}
+                  className="px-4 py-2 rounded-lg text-sm font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmSave}
+                  className="px-6 py-2 rounded-lg text-sm font-bold text-white bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all"
+                >
+                  Save Archive
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Toast Notification */}
         {toast.show && (
