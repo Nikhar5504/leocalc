@@ -18,6 +18,7 @@ export default function SavedArchives({ onLoad }) {
 
     const [renameModal, setRenameModal] = useState({ show: false, oldName: '', newName: '' });
     const [deleteCompanyModal, setDeleteCompanyModal] = useState({ show: false, companyName: '', inputName: '' });
+    const [deleteArchiveModal, setDeleteArchiveModal] = useState({ show: false, archiveId: null });
 
     // Persistent Company State (to keep empty ones visible until deleted)
     const [knownCompanies, setKnownCompanies] = useState([]);
@@ -63,16 +64,7 @@ export default function SavedArchives({ onLoad }) {
 
     const deleteArchive = async (id, e) => {
         e.stopPropagation();
-        if (!confirm('Are you sure you want to delete this archive?')) return;
-        try {
-            if (!supabase) return;
-            const { error } = await supabase.from('archives').delete().eq('id', id);
-            if (error) throw error;
-            setArchives(prev => prev.filter(item => item.id !== id));
-        } catch (err) {
-            console.error('Error deleting archive:', err);
-            alert(`Failed to delete archive. Error: ${err.message || JSON.stringify(err)}`);
-        }
+        setDeleteArchiveModal({ show: true, archiveId: id });
     };
 
     const openMoveModal = (e, archive) => {
@@ -169,7 +161,23 @@ export default function SavedArchives({ onLoad }) {
             return updated;
         });
         setDeleteCompanyModal({ show: false, companyName: '', inputName: '' });
-        alert(`Company "${companyName}" has been deleted.`);
+        // Removed intrusive alert, user will see visual feedback (card deletion)
+    };
+
+    const confirmDeleteArchive = async () => {
+        const id = deleteArchiveModal.archiveId;
+        if (!id) return;
+
+        try {
+            if (!supabase) return;
+            const { error } = await supabase.from('archives').delete().eq('id', id);
+            if (error) throw error;
+            setArchives(prev => prev.filter(item => item.id !== id));
+            setDeleteArchiveModal({ show: false, archiveId: null });
+        } catch (err) {
+            console.error('Error deleting archive:', err);
+            alert(`Failed to delete archive. Error: ${err.message || JSON.stringify(err)}`);
+        }
     };
 
     const handleLoad = (archive) => {
@@ -616,6 +624,35 @@ export default function SavedArchives({ onLoad }) {
                                 className="px-4 py-1.5 rounded-lg text-xs font-bold text-white bg-primary hover:bg-primary/90 shadow-md transition-all"
                             >
                                 Rename
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Archive Confirmation Modal */}
+            {deleteArchiveModal.show && (
+                <div className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={(e) => e.stopPropagation()}>
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col">
+                        <div className="p-5 border-b border-gray-100">
+                            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-red-500">warning</span>
+                                Delete Archive
+                            </h3>
+                            <p className="text-sm text-slate-600 mt-2">Are you sure you want to delete this archive record? This action cannot be undone.</p>
+                        </div>
+                        <div className="p-4 bg-gray-50 flex justify-end gap-3">
+                            <button
+                                onClick={() => setDeleteArchiveModal({ show: false, archiveId: null })}
+                                className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDeleteArchive}
+                                className="px-4 py-1.5 rounded-lg text-xs font-bold text-white bg-red-500 hover:bg-red-600 shadow-md transition-all"
+                            >
+                                Delete
                             </button>
                         </div>
                     </div>
