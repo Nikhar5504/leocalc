@@ -22,6 +22,9 @@ export default function SavedArchives({ onLoad }) {
     // Persistent Company State (to keep empty ones visible until deleted)
     const [knownCompanies, setKnownCompanies] = useState([]);
 
+    // Search State
+    const [searchQuery, setSearchQuery] = useState('');
+
     useEffect(() => {
         fetchArchives();
     }, []);
@@ -67,7 +70,8 @@ export default function SavedArchives({ onLoad }) {
             if (error) throw error;
             setArchives(prev => prev.filter(item => item.id !== id));
         } catch (err) {
-            console.error('Error deleting:', err);
+            console.error('Error deleting archive:', err);
+            alert(`Failed to delete archive. Error: ${err.message || JSON.stringify(err)}`);
         }
     };
 
@@ -154,11 +158,18 @@ export default function SavedArchives({ onLoad }) {
         // Remove from knownCompanies
         setKnownCompanies(prev => prev.filter(c => c !== companyName));
         setDeleteCompanyModal({ show: false, companyName: '', inputName: '' });
+        alert(`Company "${companyName}" has been deleted.`);
     };
 
     const handleLoad = (archive) => {
         if (onLoad) onLoad(archive);
     };
+
+    // --- Search Logic ---
+    const isSearching = searchQuery.trim().length > 0;
+    const searchResults = isSearching
+        ? archives.filter(a => JSON.stringify(a).toLowerCase().includes(searchQuery.toLowerCase()))
+        : [];
 
     // --- View Logic ---
     // Use knownCompanies for display instead of derived uniqueCompanies
@@ -194,18 +205,30 @@ export default function SavedArchives({ onLoad }) {
     return (
         <div className="flex flex-col gap-6 w-full font-display">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-2">
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-2">
                 <div>
                     <h1 className="text-slate-900 text-3xl md:text-4xl font-black leading-tight tracking-tight">Saved Archives</h1>
                     <p className="text-slate-500 text-base font-normal">Manage your production history and cost analysis records.</p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3">
-                    <div className="flex p-1 bg-slate-100 rounded-lg border border-slate-200">
+                <div className="flex flex-col sm:flex-row gap-3 items-center">
+                    {/* Search Bar */}
+                    <div className="relative group w-full sm:w-64">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 group-focus-within:text-primary transition-colors text-[20px]">search</span>
+                        <input
+                            type="text"
+                            placeholder="Search records..."
+                            className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium focus:ring-primary focus:border-primary transition-all shadow-sm hover:border-slate-300"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="flex p-1 bg-slate-100 rounded-lg border border-slate-200 w-full sm:w-auto overflow-x-auto">
                         {['All', 'Costing', 'Schedules', 'Quantities'].map(f => (
                             <button
                                 key={f}
                                 onClick={() => setActiveFilter(f)}
-                                className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${activeFilter === f ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                                className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeFilter === f ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
                             >
                                 {f}
                             </button>
@@ -218,8 +241,93 @@ export default function SavedArchives({ onLoad }) {
                 <div className="flex items-center justify-center h-64 text-slate-400 gap-2"><span className="material-symbols-outlined animate-spin">sync</span> Loading Archives...</div>
             ) : (
                 <div className="space-y-6">
+                    {/* View Mode: Search Results */}
+                    {isSearching && (
+                        <div className="animate-fade-in">
+                            <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-primary">search</span>
+                                Search Results
+                                <span className="bg-slate-100 text-slate-500 text-xs px-2 py-0.5 rounded-full">{searchResults.length} found</span>
+                            </h2>
+
+                            {searchResults.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                    {searchResults.map(a => {
+                                        const isCalc = a.type === 'calculator';
+                                        const isSched = a.type === 'schedule';
+                                        const isQuant = a.type === 'quantities';
+                                        let title = 'Record';
+                                        let subTitle = '';
+                                        let mainMetricLabel = '';
+                                        let mainMetricValue = '';
+
+                                        if (isCalc) {
+                                            title = a.data?.companyName || `Costing #${a.id}`;
+                                            subTitle = 'Costing Engine';
+                                            mainMetricLabel = 'Bag Price';
+                                            const p = a.data?.pricing || {};
+                                            const vendorCost = (Number(p.ppRate) + Number(p.transportPerBag) + Number(p.conversionCost)) * Number(p.bagWeight);
+                                            const price = vendorCost * (1 + (Number(p.profitMargin) / 100));
+                                            mainMetricValue = price.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+                                        } else if (isSched) {
+                                            const po = a.data?.poDetails || {};
+                                            title = po.customerName || 'Unknown';
+                                            subTitle = `PO: ${po.poNumber}`;
+                                            mainMetricLabel = 'Total Qty';
+                                            mainMetricValue = `${Number(po.totalQty).toLocaleString()} Units`;
+                                        } else if (isQuant) {
+                                            const prods = a.data?.products || [];
+                                            title = a.data?.companyName || 'Analysis';
+                                            subTitle = `${prods.length} Products`;
+                                            mainMetricLabel = 'Est. Net Profit';
+                                            mainMetricValue = prods.reduce((s, p) => s + ((Number(p.customerPrice) - Number(p.vendorCost)) * (Number(p.qty) || 0)), 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+                                        }
+
+                                        return (
+                                            <div key={a.id} className="group flex flex-col bg-white border border-slate-200 rounded-xl p-5 hover:shadow-lg hover:border-primary/30 transition-all relative overflow-hidden">
+                                                <div
+                                                    className="absolute inset-0 z-0 cursor-pointer"
+                                                    onClick={() => handleLoad(a)}
+                                                    title="Load this record"
+                                                ></div>
+                                                <div className={`absolute top-0 right-0 px-2 py-1 rounded-bl-lg text-[9px] font-black uppercase tracking-wider ${isCalc ? 'bg-blue-50 text-blue-600' : isSched ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                                                    {isCalc ? 'Costing' : isSched ? 'Schedule' : 'Quantities'}
+                                                </div>
+                                                <div className="flex justify-between items-start mb-4 mt-2">
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <h3 className="text-sm font-black text-slate-800 group-hover:text-primary transition-colors truncate w-40">{title}</h3>
+                                                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{subTitle}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-auto pt-4 border-t border-slate-50 flex justify-between items-end">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{mainMetricLabel}</span>
+                                                        <span className={`text-sm font-black ${isQuant ? 'text-emerald-600' : 'text-slate-900'}`}>{mainMetricValue}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity relative z-20">
+                                                        <button onClick={(e) => openMoveModal(e, a)} className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 rounded-md transition-all" title="Move">
+                                                            <span className="material-symbols-outlined text-[18px]">drive_file_move</span>
+                                                        </button>
+                                                        <button onClick={(e) => deleteArchive(a.id, e)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all" title="Delete">
+                                                            <span className="material-symbols-outlined text-[18px]">delete</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="p-12 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                                    <span className="material-symbols-outlined text-4xl mb-2">search_off</span>
+                                    <p className="font-bold">No results found for "{searchQuery}"</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {/* View Mode: Companies Grid */}
-                    {viewMode === 'companies' && (
+                    {!isSearching && viewMode === 'companies' && (
                         <div className="animate-fade-in">
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                                 {displayedCompanies.map(company => {
@@ -311,7 +419,7 @@ export default function SavedArchives({ onLoad }) {
                     )}
 
                     {/* View Mode: Details (Drill-down) */}
-                    {viewMode === 'details' && selectedCompany && (
+                    {!isSearching && viewMode === 'details' && selectedCompany && (
                         <div className="animate-fade-in">
                             <button
                                 onClick={handleBackToGrid}
