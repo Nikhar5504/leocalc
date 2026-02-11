@@ -20,9 +20,18 @@ function App() {
   const [selectedCompany, setSelectedCompany] = useState('');
   const [newCompanyInput, setNewCompanyInput] = useState('');
 
+  // Edit Mode State
+  const [editingArchiveId, setEditingArchiveId] = useState(null);
+
   const showToast = (message) => {
     setToast({ show: true, message });
     setTimeout(() => setToast({ show: false, message: '' }), 2000);
+  };
+
+  // Improved Tab Switching (clears edit mode)
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setEditingArchiveId(null); // Clear edit mode when switching tabs
   };
 
   // --- Auth & Initial Load Logic ---
@@ -182,21 +191,43 @@ function App() {
     const finalPayload = { ...saveModalConfig.payload, companyName };
 
     try {
-      const { error } = await supabase
-        .from('archives')
-        .insert([
-          {
+      let error;
+
+      if (editingArchiveId) {
+        // UPDATE existing record
+        const result = await supabase
+          .from('archives')
+          .update({
             type: saveModalConfig.type,
             data: finalPayload,
             company_name: companyName,
-            status: 'saved',
-            created_at: new Date(),
-          }
-        ]);
+            updated_at: new Date(), // Ensure schema supports this or use created_at if acceptable (though update usually prefers updated_at)
+          })
+          .eq('id', editingArchiveId);
+        error = result.error;
+      } else {
+        // INSERT new record
+        const result = await supabase
+          .from('archives')
+          .insert([
+            {
+              type: saveModalConfig.type,
+              data: finalPayload,
+              company_name: companyName,
+              status: 'saved',
+              created_at: new Date(),
+            }
+          ]);
+        error = result.error;
+      }
 
       if (error) throw error;
-      showToast(`Saved Successfully for ${companyName}!`);
+
+      showToast(editingArchiveId ? `Updated Record for ${companyName}!` : `Saved Successfully for ${companyName}!`);
       setShowSaveModal(false);
+
+      // Optional: Clear edit mode after save if you want fresh start, or keep it to allow further edits.
+      // Keeping it allows continuous editing.
     } catch (err) {
       console.error('Error saving:', err);
       showToast(`Save Error: ${err.message || 'Unknown error'}`);
@@ -221,6 +252,7 @@ function App() {
       if (archive.data.products) setProducts(archive.data.products);
       setActiveTab('quantities');
     }
+    if (archive.id) setEditingArchiveId(archive.id); // Enable Edit Mode
     showToast('Loaded Archive: ' + (archive.data.companyName || 'Archive'));
   };
 
@@ -304,16 +336,16 @@ function App() {
 
           <div className="flex items-center gap-3">
             <div className="flex p-1 bg-slate-100 rounded-lg border border-slate-200">
-              <button onClick={() => setActiveTab('calculator')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'calculator' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}>
+              <button onClick={() => handleTabChange('calculator')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'calculator' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}>
                 <span className="material-symbols-outlined text-[16px]">calculate</span> Calculator
               </button>
-              <button onClick={() => setActiveTab('supply')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'supply' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}>
+              <button onClick={() => handleTabChange('supply')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'supply' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}>
                 <span className="material-symbols-outlined text-[16px]">local_shipping</span> Supply
               </button>
-              <button onClick={() => setActiveTab('quantities')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'quantities' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}>
+              <button onClick={() => handleTabChange('quantities')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'quantities' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}>
                 <span className="material-symbols-outlined text-[16px]">calculate</span> Quantities
               </button>
-              <button onClick={() => setActiveTab('archives')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'archives' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}>
+              <button onClick={() => handleTabChange('archives')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'archives' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}>
                 <span className="material-symbols-outlined text-[16px]">folder_open</span> Archives
               </button>
             </div>
@@ -326,7 +358,7 @@ function App() {
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-all text-sm font-medium shadow-lg shadow-primary/20"
               >
                 <span className="material-symbols-outlined text-[18px]">save</span>
-                <span>Save {activeTab === 'supply' ? 'Schedule' : 'Config'}</span>
+                <span>{editingArchiveId ? 'Update' : 'Save'} {activeTab === 'supply' ? 'Schedule' : 'Config'}</span>
               </button>
             )}
 
