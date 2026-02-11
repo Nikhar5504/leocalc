@@ -232,9 +232,14 @@ export default function SavedArchives({ onLoad }) {
                                     return (
                                         <div
                                             key={company}
-                                            onClick={() => handleCompanyClick(company)}
-                                            className="relative bg-white border border-slate-200 rounded-xl p-4 hover:shadow-lg hover:border-primary/50 transition-all cursor-pointer group flex flex-col items-center text-center gap-3"
+                                            className="relative bg-white border border-slate-200 rounded-xl p-4 hover:shadow-lg hover:border-primary/50 transition-all group flex flex-col items-center text-center gap-3"
                                         >
+                                            {/* Click Overlay for Navigation */}
+                                            <div
+                                                className="absolute inset-0 z-0 cursor-pointer"
+                                                onClick={() => handleCompanyClick(company)}
+                                                title={`View ${company} records`}
+                                            ></div>
                                             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors relative">
                                                 <span className="material-symbols-outlined text-[24px]">business</span>
                                             </div>
@@ -244,24 +249,24 @@ export default function SavedArchives({ onLoad }) {
                                             </div>
                                             <button
                                                 onClick={(e) => {
-                                                    e.stopPropagation();
+                                                    e.stopPropagation(); // Double safety
                                                     setRenameModal({ show: true, oldName: company, newName: company });
                                                 }}
-                                                className="absolute top-2 right-2 p-1.5 text-slate-300 hover:text-primary hover:bg-slate-100 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                                className="absolute top-2 right-2 z-20 p-1.5 text-slate-300 hover:text-primary hover:bg-slate-100 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                                                 title="Rename Company"
                                             >
                                                 <span className="material-symbols-outlined text-[16px]">edit</span>
                                             </button>
                                             <button
                                                 onClick={(e) => {
-                                                    e.stopPropagation();
+                                                    e.stopPropagation(); // Double safety
                                                     if (count > 0) {
                                                         alert(`Cannot delete company "${company}". It contains ${count} records. Delete them first.`);
                                                         return;
                                                     }
                                                     setDeleteCompanyModal({ show: true, companyName: company, inputName: '' });
                                                 }}
-                                                className="absolute top-2 left-2 p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                                className="absolute top-2 left-2 z-20 p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                                                 title="Delete Company"
                                             >
                                                 <span className="material-symbols-outlined text-[16px]">delete</span>
@@ -359,7 +364,14 @@ export default function SavedArchives({ onLoad }) {
                                     }
 
                                     return (
-                                        <div key={a.id} onClick={() => handleLoad(a)} className="group flex flex-col bg-white border border-slate-200 rounded-xl p-5 hover:shadow-lg hover:border-primary/30 transition-all cursor-pointer relative overflow-hidden">
+                                        <div key={a.id} className="group flex flex-col bg-white border border-slate-200 rounded-xl p-5 hover:shadow-lg hover:border-primary/30 transition-all relative overflow-hidden">
+                                            {/* Click Overlay for Loading Archive */}
+                                            <div
+                                                className="absolute inset-0 z-0 cursor-pointer"
+                                                onClick={() => handleLoad(a)}
+                                                title="Load this record"
+                                            ></div>
+
                                             {/* Type Badge */}
                                             <div className={`absolute top-0 right-0 px-2 py-1 rounded-bl-lg text-[9px] font-black uppercase tracking-wider ${isCalc ? 'bg-blue-50 text-blue-600' : isSched ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>
                                                 {isCalc ? 'Costing' : isSched ? 'Schedule' : 'Quantities'}
@@ -377,7 +389,7 @@ export default function SavedArchives({ onLoad }) {
                                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{mainMetricLabel}</span>
                                                     <span className={`text-sm font-black ${isQuant ? 'text-emerald-600' : 'text-slate-900'}`}>{mainMetricValue}</span>
                                                 </div>
-                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity relative z-10">
+                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity relative z-20">
                                                     <button
                                                         onClick={(e) => openMoveModal(e, a)}
                                                         className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 rounded-md transition-all"
