@@ -155,8 +155,19 @@ export default function SavedArchives({ onLoad }) {
             return;
         }
 
+        // Double check count before final delete
+        const remainingRecords = archives.filter(a => (a.company_name || 'Unassigned') === companyName).length;
+        if (remainingRecords > 0) {
+            alert(`Cannot delete company. It still has ${remainingRecords} records. Please delete them first.`);
+            setDeleteCompanyModal({ show: false, companyName: '', inputName: '' });
+            return;
+        }
+
         // Remove from knownCompanies
-        setKnownCompanies(prev => prev.filter(c => c !== companyName));
+        setKnownCompanies(prev => {
+            const updated = prev.filter(c => c !== companyName);
+            return updated;
+        });
         setDeleteCompanyModal({ show: false, companyName: '', inputName: '' });
         alert(`Company "${companyName}" has been deleted.`);
     };
@@ -305,10 +316,18 @@ export default function SavedArchives({ onLoad }) {
                                                         <span className={`text-sm font-black ${isQuant ? 'text-emerald-600' : 'text-slate-900'}`}>{mainMetricValue}</span>
                                                     </div>
                                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity relative z-20">
-                                                        <button onClick={(e) => openMoveModal(e, a)} className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 rounded-md transition-all" title="Move">
+                                                        <button
+                                                            onClick={(e) => openMoveModal(e, a)}
+                                                            className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 rounded-md transition-all"
+                                                            title="Move to another company"
+                                                        >
                                                             <span className="material-symbols-outlined text-[18px]">drive_file_move</span>
                                                         </button>
-                                                        <button onClick={(e) => deleteArchive(a.id, e)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all" title="Delete">
+                                                        <button
+                                                            onClick={(e) => deleteArchive(a.id, e)}
+                                                            className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all"
+                                                            title="Delete"
+                                                        >
                                                             <span className="material-symbols-outlined text-[18px]">delete</span>
                                                         </button>
                                                     </div>
