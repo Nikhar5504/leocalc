@@ -22,6 +22,8 @@ function App() {
 
   // Edit Mode State
   const [editingArchiveId, setEditingArchiveId] = useState(null);
+  const [editingCompanyName, setEditingCompanyName] = useState(null);
+  const [editingRecordName, setEditingRecordName] = useState(null);
 
   const showToast = (message) => {
     setToast({ show: true, message });
@@ -32,6 +34,8 @@ function App() {
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setEditingArchiveId(null); // Clear edit mode when switching tabs
+    setEditingCompanyName(null);
+    setEditingRecordName(null);
   };
 
   // --- Auth & Initial Load Logic ---
@@ -177,6 +181,50 @@ function App() {
     setShowSaveModal(true);
   };
 
+  // New Handler for Quick Update (Bypasses Modal)
+  const handleQuickUpdate = async () => {
+    if (!editingArchiveId || !editingCompanyName) return;
+
+    // Construct Payload manually (similar to handleSaveConfig logic)
+    const isCalculator = activeTab === 'calculator';
+    const isSupply = activeTab === 'supply';
+    const isQuantities = activeTab === 'quantities';
+
+    let type = 'calculator';
+    let payload = {};
+
+    if (isCalculator) {
+      type = 'calculator';
+      payload = { pricing: pricingInputs, freight: freightInputs };
+    } else if (isSupply) {
+      type = 'schedule';
+      payload = { poDetails, vendors, supplies };
+    } else if (isQuantities) {
+      type = 'quantities';
+      payload = { products };
+    }
+
+    const finalPayload = { ...payload, companyName: editingCompanyName, recordName: editingRecordName };
+
+    try {
+      const { error } = await supabase
+        .from('archives')
+        .update({
+          type: type,
+          data: finalPayload,
+          company_name: editingCompanyName,
+          // Removed updated_at as it doesn't exist in schema
+        })
+        .eq('id', editingArchiveId);
+
+      if (error) throw error;
+      showToast(`Updated Record for ${editingCompanyName}!`);
+    } catch (err) {
+      console.error('Error updating:', err);
+      showToast(`Update Error: ${err.message || 'Unknown error'}`);
+    }
+  };
+
   const confirmSave = async () => {
     const companyName = selectedCompany === 'NEW_COMPANY_OPTION' ? newCompanyInput : selectedCompany;
 
@@ -189,6 +237,7 @@ function App() {
 
     // Update payload with company name if needed for internal consistency (though DB col is distinct)
     const finalPayload = { ...saveModalConfig.payload, companyName };
+    if (editingRecordName) finalPayload.recordName = editingRecordName;
 
     try {
       let error;
@@ -252,8 +301,13 @@ function App() {
       if (archive.data.products) setProducts(archive.data.products);
       setActiveTab('quantities');
     }
-    if (archive.id) setEditingArchiveId(archive.id); // Enable Edit Mode
-    showToast('Loaded Archive: ' + (archive.data.companyName || 'Archive'));
+    if (archive.id) {
+      setEditingArchiveId(archive.id); // Enable Edit Mode
+      // CRITICAL FIX: Prioritize DB column over JSON blob to prevent reverting renames
+      setEditingCompanyName(archive.company_name || archive.data.companyName);
+      setEditingRecordName(archive.data.recordName); // Preserve record name
+    }
+    showToast('Loaded Archive: ' + (archive.company_name || archive.data.companyName || 'Archive'));
   };
 
   const handleLogout = async () => {
@@ -354,7 +408,7 @@ function App() {
 
             {activeTab !== 'archives' && (
               <button
-                onClick={handleSaveConfig}
+                onClick={editingArchiveId ? handleQuickUpdate : handleSaveConfig}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-all text-sm font-medium shadow-lg shadow-primary/20"
               >
                 <span className="material-symbols-outlined text-[18px]">save</span>

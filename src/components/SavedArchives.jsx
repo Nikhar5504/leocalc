@@ -16,7 +16,7 @@ export default function SavedArchives({ onLoad }) {
     const [targetCompany, setTargetCompany] = useState('');
     const [newTargetCompany, setNewTargetCompany] = useState('');
 
-    const [renameModal, setRenameModal] = useState({ show: false, oldName: '', newName: '' });
+    const [renameModal, setRenameModal] = useState({ show: false, type: '', id: null, oldName: '', newName: '' }); // type: 'company' | 'archive'
     const [deleteCompanyModal, setDeleteCompanyModal] = useState({ show: false, companyName: '', inputName: '' });
     const [deleteArchiveModal, setDeleteArchiveModal] = useState({ show: false, archiveId: null });
 
@@ -105,17 +105,25 @@ export default function SavedArchives({ onLoad }) {
         }
     };
 
-    const handleRenameCompany = async () => {
-        const { oldName, newName } = renameModal;
+    const handleRename = async () => {
+        const { type, oldName, newName, id } = renameModal;
         if (!newName || newName.trim() === '') {
-            alert('Please enter a valid company name.');
+            alert('Please enter a valid name.');
             return;
         }
         if (newName === oldName) {
-            setRenameModal({ show: false, oldName: '', newName: '' });
+            setRenameModal({ show: false, type: '', id: null, oldName: '', newName: '' });
             return;
         }
 
+        if (type === 'company') {
+            await handleRenameCompany(oldName, newName);
+        } else if (type === 'archive') {
+            await handleRenameArchive(id, newName);
+        }
+    };
+
+    const handleRenameCompany = async (oldName, newName) => {
         try {
             const { error } = await supabase
                 .from('archives')
@@ -133,10 +141,37 @@ export default function SavedArchives({ onLoad }) {
                 return updated;
             });
 
-            setRenameModal({ show: false, oldName: '', newName: '' });
+            setRenameModal({ show: false, type: '', id: null, oldName: '', newName: '' });
         } catch (err) {
             console.error('Error renaming company:', err);
             alert('Failed to rename company.');
+        }
+    };
+
+    const handleRenameArchive = async (id, newName) => {
+        try {
+            // Fetch current data first to append recordName, or just use jsonb_set if we trust structure.
+            // Safer to fetch and update whole data blob or use postgres jsonb capabilities.
+            // Let's use a simple fetch-modify-update for safety on client side structure.
+            const target = archives.find(a => a.id === id);
+            if (!target) return;
+
+            const newData = { ...target.data, recordName: newName };
+
+            const { error } = await supabase
+                .from('archives')
+                .update({ data: newData }) // Update the JSON blob
+                .eq('id', id);
+
+            if (error) throw error;
+
+            // Update local state
+            setArchives(prev => prev.map(a => a.id === id ? { ...a, data: newData } : a));
+
+            setRenameModal({ show: false, type: '', id: null, oldName: '', newName: '' });
+        } catch (err) {
+            console.error('Error renaming archive:', err);
+            alert('Failed to rename archive.');
         }
     };
 
@@ -281,7 +316,7 @@ export default function SavedArchives({ onLoad }) {
                                         let mainMetricValue = '';
 
                                         if (isCalc) {
-                                            title = a.data?.companyName || `Costing #${a.id}`;
+                                            title = a.data?.recordName || a.data?.companyName || `Costing #${a.id}`;
                                             subTitle = 'Costing Engine';
                                             mainMetricLabel = 'Bag Price';
                                             const p = a.data?.pricing || {};
@@ -290,13 +325,13 @@ export default function SavedArchives({ onLoad }) {
                                             mainMetricValue = price.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
                                         } else if (isSched) {
                                             const po = a.data?.poDetails || {};
-                                            title = po.customerName || 'Unknown';
+                                            title = a.data?.recordName || po.customerName || 'Unknown';
                                             subTitle = `PO: ${po.poNumber}`;
                                             mainMetricLabel = 'Total Qty';
                                             mainMetricValue = `${Number(po.totalQty).toLocaleString()} Units`;
                                         } else if (isQuant) {
                                             const prods = a.data?.products || [];
-                                            title = a.data?.companyName || 'Analysis';
+                                            title = a.data?.recordName || a.data?.companyName || 'Analysis';
                                             subTitle = `${prods.length} Products`;
                                             mainMetricLabel = 'Est. Net Profit';
                                             mainMetricValue = prods.reduce((s, p) => s + ((Number(p.customerPrice) - Number(p.vendorCost)) * (Number(p.qty) || 0)), 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
@@ -319,6 +354,16 @@ export default function SavedArchives({ onLoad }) {
                                                         <span className={`text-sm font-black ${isQuant ? 'text-emerald-600' : 'text-slate-900'}`}>{mainMetricValue}</span>
                                                     </div>
                                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity relative z-20" onClick={(e) => e.stopPropagation()}>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setRenameModal({ show: true, type: 'archive', id: a.id, oldName: title, newName: title });
+                                                            }}
+                                                            className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 rounded-md transition-all"
+                                                            title="Rename Record"
+                                                        >
+                                                            <span className="material-symbols-outlined text-[18px]">edit</span>
+                                                        </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); openMoveModal(e, a); }}
                                                             className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 rounded-md transition-all"
@@ -376,7 +421,7 @@ export default function SavedArchives({ onLoad }) {
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation(); // Triple safety
-                                                        setRenameModal({ show: true, oldName: company, newName: company });
+                                                        setRenameModal({ show: true, type: 'company', oldName: company, newName: company });
                                                     }}
                                                     className="p-1.5 text-slate-300 hover:text-primary hover:bg-slate-100 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                                                     title="Rename Company"
@@ -471,7 +516,7 @@ export default function SavedArchives({ onLoad }) {
                                     let date = new Date(a.created_at).toLocaleDateString();
 
                                     if (isCalc) {
-                                        title = a.data?.companyName || `Costing #${a.id}`;
+                                        title = a.data?.recordName || a.data?.companyName || `Costing #${a.id}`;
                                         subTitle = 'Costing Engine';
                                         mainMetricLabel = 'Bag Price';
                                         const p = a.data?.pricing || {};
@@ -480,13 +525,13 @@ export default function SavedArchives({ onLoad }) {
                                         mainMetricValue = price.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
                                     } else if (isSched) {
                                         const po = a.data?.poDetails || {};
-                                        title = po.customerName || 'Unknown';
+                                        title = a.data?.recordName || po.customerName || 'Unknown';
                                         subTitle = `PO: ${po.poNumber}`;
                                         mainMetricLabel = 'Total Qty';
                                         mainMetricValue = `${Number(po.totalQty).toLocaleString()} Units`;
                                     } else if (isQuant) {
                                         const prods = a.data?.products || [];
-                                        title = a.data?.companyName || 'Analysis';
+                                        title = a.data?.recordName || a.data?.companyName || 'Analysis';
                                         subTitle = `${prods.length} Products`;
                                         mainMetricLabel = 'Est. Net Profit';
                                         mainMetricValue = prods.reduce((s, p) => s + ((Number(p.customerPrice) - Number(p.vendorCost)) * (Number(p.qty) || 0)), 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
@@ -512,6 +557,16 @@ export default function SavedArchives({ onLoad }) {
                                                     <span className={`text-sm font-black ${isQuant ? 'text-emerald-600' : 'text-slate-900'}`}>{mainMetricValue}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity relative z-20" onClick={(e) => e.stopPropagation()}>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setRenameModal({ show: true, type: 'archive', id: a.id, oldName: title, newName: title });
+                                                        }}
+                                                        className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 rounded-md transition-all"
+                                                        title="Rename Record"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[18px]">edit</span>
+                                                    </button>
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); openMoveModal(e, a); }}
                                                         className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 rounded-md transition-all"
@@ -597,7 +652,7 @@ export default function SavedArchives({ onLoad }) {
                 <div className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={(e) => e.stopPropagation()}>
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col">
                         <div className="p-5 border-b border-gray-100">
-                            <h3 className="text-lg font-bold text-slate-900">Rename Company</h3>
+                            <h3 className="text-lg font-bold text-slate-900">Rename {renameModal.type === 'company' ? 'Company' : 'Record'}</h3>
                             <p className="text-xs text-slate-500 mt-1">Renaming <span className="font-semibold text-primary">{renameModal.oldName}</span></p>
                         </div>
                         <div className="p-5 flex flex-col gap-4">
@@ -605,7 +660,7 @@ export default function SavedArchives({ onLoad }) {
                                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">New Name</span>
                                 <input
                                     className="form-input rounded-lg border-slate-200 text-sm font-medium focus:ring-primary focus:border-primary"
-                                    placeholder="Enter new company name..."
+                                    placeholder={`Enter new ${renameModal.type} name...`}
                                     value={renameModal.newName}
                                     onChange={(e) => setRenameModal(prev => ({ ...prev, newName: e.target.value }))}
                                     autoFocus
@@ -614,13 +669,13 @@ export default function SavedArchives({ onLoad }) {
                         </div>
                         <div className="p-4 bg-gray-50 flex justify-end gap-3">
                             <button
-                                onClick={() => setRenameModal({ show: false, oldName: '', newName: '' })}
+                                onClick={() => setRenameModal({ show: false, type: '', id: null, oldName: '', newName: '' })}
                                 className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
-                                onClick={handleRenameCompany}
+                                onClick={handleRename}
                                 className="px-4 py-1.5 rounded-lg text-xs font-bold text-white bg-primary hover:bg-primary/90 shadow-md transition-all"
                             >
                                 Rename
