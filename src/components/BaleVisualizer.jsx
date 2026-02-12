@@ -22,16 +22,19 @@ const Bales = ({ count, bWidth, bHeight, bDepth, vWidth, vHeight, vDepth }) => {
 
         let c = 0;
 
-        for (let y = 0; y < ny; y++) {
-            for (let z = 0; z < nz; z++) {
-                for (let x = 0; x < nx; x++) {
+        // Z (Back-to-Front) -> Y (Bottom-to-Top) -> X (Left-to-Right)
+        // User requested: "adjusted from the back side ... if it is loaded in a flat way, then height is decreasing"
+        // This implies filling the FULL VERTICAL SLICE at the back before moving forward.
+        for (let x = 0; x < nx; x++) {          // Depth (Front to Back or vice versa depending on camera)
+            for (let y = 0; y < ny; y++) {      // Height
+                for (let z = 0; z < nz; z++) {  // Width
                     if (c >= count) return arr;
                     if (c >= maxRender) return arr;
 
                     arr.push([
-                        startX + x * bWidth,
-                        startY + y * bHeight,
-                        startZ + z * bDepth
+                        startX + x * bWidth,  // X (Length) Position: Controlled by x (Index along Length).
+                        startY + y * bHeight, // Y (Height) Position: Controlled by y (Index along Height).
+                        startZ + z * bDepth   // Z (Width) Position: Controlled by z (Index along Width).
                     ]);
                     c++;
                 }

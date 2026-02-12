@@ -15,7 +15,37 @@ const convertValue = (val, fromUnit, toUnit) => {
 export default function FreightCalculator({ inputs, onChange, bagWeight }) {
     const { unit, vehicleL, vehicleW, vehicleH, baleL, baleW, baleH, efficiency, palletCapacity, freightCharge, customCount, effectivePalletCount } = inputs;
 
-    // Helper to normalize visuals to CM
+    // Local Unit State for each dimension
+    const [dimUnits, setDimUnits] = React.useState({
+        vehicleL: unit, vehicleW: unit, vehicleH: unit,
+        baleL: unit, baleW: unit, baleH: unit
+    });
+
+    // Update local units when master unit changes (optional, but good UX to default to master)
+    // Actually, user implies they want to be able to set them differently.
+    // Let's only sync if they haven't been touched? Or just init with unit. 
+    // Let's use an effect to sync them IF they match the OLD unit?
+    // Simpler: Just init. If master changes, we don't force change local unless we want to reset.
+    // Let's keep them persistent per field.
+
+    // Helper helper
+    const getDisplayValue = (val, localUnit) => {
+        if (!val) return '';
+        // inputs[name] is in Master Unit 'unit'.
+        // We want to display in 'localUnit'.
+        return convertValue(val, unit, localUnit);
+    };
+
+    const handleLocalValueChange = (e, name, localUnit) => {
+        const val = e.target.value;
+        // Val is in localUnit. Convert to Master Unit 'unit' for storage.
+        const newValInMaster = convertValue(val, localUnit, unit);
+        onChange({ target: { name: name, value: newValInMaster } });
+    };
+
+    const handleLocalUnitChange = (name, newUnit) => {
+        setDimUnits(prev => ({ ...prev, [name]: newUnit }));
+    };
     const toCm = (val) => {
         const v = parseFloat(val) || 0;
         if (unit === 'm') return v * 100;
@@ -56,24 +86,44 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
     const fCharge = parseFloat(freightCharge) || 0;
     const freightPerPiece = totalPieces > 0 ? fCharge / totalPieces : 0;
 
-    const renderDimInput = (label, name) => (
-        <div>
-            <label className="text-text-muted text-xs font-medium uppercase tracking-wider block mb-1.5">{label}</label>
-            <div className="flex rounded-lg shadow-sm">
-                <input
-                    className="block w-full rounded-l-lg border border-r-0 border-slate-200 bg-slate-50 text-sm text-text-main focus:ring-primary focus:border-primary py-2.5 px-3 font-mono font-semibold"
-                    type="number"
-                    name={name}
-                    value={inputs[name]}
-                    onChange={onChange}
-                    placeholder="0"
-                />
-                <div className="rounded-r-lg border border-l-0 border-slate-200 bg-slate-100 text-xs font-bold text-slate-500 py-2.5 px-3 flex items-center justify-center min-w-[3rem]">
-                    {unit.toUpperCase()}
+    const renderDimInput = (label, name) => {
+        const localUnit = dimUnits[name] || unit;
+        const displayVal = getDisplayValue(inputs[name], localUnit);
+        const masterVal = parseFloat(inputs[name] || 0);
+        const isDifferent = localUnit !== unit;
+
+        return (
+            <div>
+                <label className="text-text-muted text-xs font-medium uppercase tracking-wider block mb-1.5">{label}</label>
+                <div className="flex rounded-lg shadow-sm">
+                    <input
+                        className="block w-full rounded-l-lg border border-r-0 border-slate-200 bg-slate-50 text-sm text-text-main focus:ring-primary focus:border-primary py-2.5 px-3 font-mono font-semibold"
+                        type="number"
+                        value={displayVal}
+                        onChange={(e) => handleLocalValueChange(e, name, localUnit)}
+                        placeholder="0"
+                    />
+                    <div className="border border-l-0 border-slate-200 bg-slate-100 py-0 px-0 flex items-center justify-center min-w-[4rem] rounded-r-lg">
+                        <select
+                            value={localUnit}
+                            onChange={(e) => handleLocalUnitChange(name, e.target.value)}
+                            className="bg-transparent border-none text-xs font-bold text-slate-600 focus:ring-0 cursor-pointer h-full py-2.5 pl-2 pr-1 w-full text-center"
+                        >
+                            <option value="m">M</option>
+                            <option value="ft">FT</option>
+                            <option value="in">IN</option>
+                            <option value="cm">CM</option>
+                        </select>
+                    </div>
                 </div>
+                {isDifferent && (
+                    <p className="text-[10px] text-primary mt-1 text-right font-medium">
+                        = {masterVal} {unit.toUpperCase()} (Converted)
+                    </p>
+                )}
             </div>
-        </div>
-    );
+        );
+    };
 
     return (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 h-full min-h-[420px]">
