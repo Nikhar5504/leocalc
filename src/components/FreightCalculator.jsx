@@ -13,7 +13,7 @@ const convertValue = (val, fromUnit, toUnit) => {
 };
 
 export default function FreightCalculator({ inputs, onChange, bagWeight }) {
-    const { unit, vehicleL, vehicleW, vehicleH, baleL, baleW, baleH, efficiency, palletCapacity, freightCharge, customCount } = inputs;
+    const { unit, vehicleL, vehicleW, vehicleH, baleL, baleW, baleH, efficiency, palletCapacity, freightCharge, customCount, effectivePalletCount } = inputs;
 
     // Helper to normalize visuals to CM
     const toCm = (val) => {
@@ -37,8 +37,13 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
     const balesInWidth = bW_cm > 0 ? Math.floor(vW_cm / bW_cm) : 0;
     const balesInHeight = bH_cm > 0 ? Math.floor(vH_cm / bH_cm) : 0;
     const totalBales = balesInLength * balesInWidth * balesInHeight;
-    const effPercent = parseFloat(efficiency) || 0;
-    const effectiveBales = Math.floor(totalBales * (effPercent / 100));
+
+    // Use manual input if available, otherwise fallback to efficiency calculation (for legacy saves)
+    // Actually, user wants MANUAL input to be the driver. 
+    // If effectivePalletCount is undefined (old save), allow efficiency to drive it initially?
+    // User requested "editor can edit the total effective pallets".
+    // So `effectiveBales` IS `effectivePalletCount`.
+    const effectiveBales = effectivePalletCount !== undefined ? (parseInt(effectivePalletCount) || 0) : Math.floor(totalBales * ((parseFloat(efficiency) || 92) / 100));
 
     // Stats
     const bWeight = parseFloat(bagWeight) || 0; // grams
@@ -128,19 +133,16 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
                         />
                     </label>
                     <label className="flex flex-col gap-2">
-                        <span className="text-text-muted text-xs font-medium uppercase tracking-wider">Packing Efficiency</span>
-                        <div className="flex items-center gap-3">
-                            <input
-                                className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
-                                type="range"
-                                name="efficiency"
-                                min="50"
-                                max="100"
-                                value={efficiency}
-                                onChange={onChange}
-                            />
-                            <span className="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-text-main font-mono text-sm w-12 text-center font-bold">{efficiency}%</span>
-                        </div>
+                        <span className="text-text-muted text-xs font-medium uppercase tracking-wider">Effective Pallets (Fit in Vehicle)</span>
+                        <input
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-3 text-text-main placeholder-slate-400 focus:ring-1 focus:ring-primary focus:border-primary font-mono text-sm font-semibold"
+                            type="number"
+                            name="effectivePalletCount"
+                            value={effectivePalletCount ?? ''} // Handle undefined
+                            onChange={onChange}
+                            placeholder={Math.floor(totalBales * 0.9)} // Hint: 90% of max?
+                        />
+                        <p className="text-[10px] text-slate-400 text-right">Max Theoretical: {totalBales}</p>
                     </label>
                     <label className="flex flex-col gap-2">
                         <span className="text-text-muted text-xs font-medium uppercase tracking-wider">Total Freight Cost</span>

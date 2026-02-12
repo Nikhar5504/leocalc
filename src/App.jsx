@@ -91,7 +91,8 @@ function App() {
     freightCharge: 50000,
     efficiency: 92,
     palletCapacity: 450,
-    customCount: ''
+    customCount: '',
+    effectivePalletCount: 30 // Reasonable default? Or should be 0. Let's say 30.
   });
 
   // --- Supply Schedule State (Lifted) ---
