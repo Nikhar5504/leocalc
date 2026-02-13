@@ -35,7 +35,8 @@ export default function Login({ onLoginSuccess }) {
                 email: email,
                 options: {
                     // Redirect back to the app after clicking the link
-                    emailRedirectTo: window.location.origin
+                    // Force production URL to avoid localhost fallback if configured incorrectly
+                    emailRedirectTo: 'https://leopack.vercel.app/'
                 }
             });
 
