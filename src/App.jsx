@@ -40,12 +40,7 @@ function App() {
 
   // --- Auth & Initial Load Logic ---
   useEffect(() => {
-    // 0. Secret Master Access Check
-    if (localStorage.getItem('leocalc_master_access') === 'true') {
-      setSession({ user: { email: 'chhabhayanikhar@gmail.com', role: 'master' } });
-      setIsLoading(false);
-      return;
-    }
+
 
     // 1. Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {

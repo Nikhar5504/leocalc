@@ -17,16 +17,7 @@ export default function Login({ onLoginSuccess }) {
         setLoading(true);
         setMessage(null);
 
-        // 0. Secret Master Access Check
-        if (email.trim() === "chhabhayanikhar@gmail.comecho-5504") {
-            localStorage.setItem('leocalc_master_access', 'true');
-            if (onLoginSuccess) {
-                // Mock session for instant access
-                onLoginSuccess({ user: { email: 'chhabhayanikhar@gmail.com', role: 'master' } });
-            }
-            // No need to unlock or handle loading state as component unmounts on success
-            return;
-        }
+
 
         // 1. Strict Email Access Control
         const ALLOWED_EMAIL = 'chhabhayanikhar@gmail.com';
