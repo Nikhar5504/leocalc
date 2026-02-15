@@ -252,6 +252,7 @@ export default function SavedArchives({ onLoad }) {
             if (activeFilter === 'Costing') return a.type === 'calculator';
             if (activeFilter === 'Schedules') return a.type === 'schedule';
             if (activeFilter === 'Quantities') return a.type === 'quantities';
+            if (activeFilter === 'Analysis') return a.type === 'cost_analysis';
             return true;
         });
     };
@@ -267,7 +268,9 @@ export default function SavedArchives({ onLoad }) {
                 <div className="flex flex-col sm:flex-row gap-3 items-center">
                     {/* Search Bar */}
                     <div className="relative group w-full sm:w-64">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 group-focus-within:text-primary transition-colors text-[20px]">search</span>
+                        <div className="absolute left-3 top-0 bottom-0 flex items-center pointer-events-none">
+                            <span className="material-symbols-outlined text-slate-400 group-focus-within:text-primary transition-colors text-[20px]">search</span>
+                        </div>
                         <input
                             type="text"
                             placeholder="Search records..."
@@ -278,7 +281,7 @@ export default function SavedArchives({ onLoad }) {
                     </div>
 
                     <div className="flex p-1 bg-slate-100 rounded-lg border border-slate-200 w-full sm:w-auto overflow-x-auto">
-                        {['All', 'Costing', 'Schedules', 'Quantities'].map(f => (
+                        {['All', 'Costing', 'Schedules', 'Quantities', 'Analysis'].map(f => (
                             <button
                                 key={f}
                                 onClick={() => setActiveFilter(f)}
@@ -335,12 +338,45 @@ export default function SavedArchives({ onLoad }) {
                                             subTitle = `${prods.length} Products`;
                                             mainMetricLabel = 'Est. Net Profit';
                                             mainMetricValue = prods.reduce((s, p) => s + ((Number(p.customerPrice) - Number(p.vendorCost)) * (Number(p.qty) || 0)), 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+                                        } else if (a.type === 'cost_analysis') {
+                                            const vendorsList = Array.isArray(a.data) ? a.data : (a.data?.vendors || []);
+                                            // Calculate Metrics
+                                            const calculated = vendorsList.map(v => {
+                                                const base = parseFloat(v.basePrice) || 0;
+                                                const freight = parseFloat(v.freight) || 0;
+                                                const days = parseFloat(v.creditDays) || 0;
+                                                const qty = parseFloat(v.quantity) || 0;
+                                                const interestRate = parseFloat(v.interestRate) || 12;
+                                                const creditSavings = (base * days * (interestRate / 100)) / 365;
+                                                const tco = base + freight - creditSavings;
+
+                                                const sellingPrice = parseFloat(v.sellingPrice) || 0;
+                                                const customerDays = parseFloat(v.customerCreditDays) || 0;
+                                                const cashGapDays = customerDays - days;
+                                                const revenue = sellingPrice * qty;
+                                                const cogs = tco * qty;
+                                                const grossMargin = revenue - cogs;
+                                                const financingCost = (tco * cashGapDays * (interestRate / 100)) / 365;
+                                                const totalFinancingCost = financingCost * qty;
+                                                const netProfit = grossMargin - totalFinancingCost;
+                                                return { ...v, tco, netProfit };
+                                            });
+
+                                            // Determine L1
+                                            const l1 = calculated.reduce((prev, curr) => (prev.tco < curr.tco) ? prev : curr, calculated[0] || {});
+                                            // Total Profit
+                                            const totalProfit = calculated.reduce((sum, v) => sum + (v.netProfit || 0), 0);
+
+                                            title = a.data?.recordName || a.data?.companyName || 'Cost Analysis';
+                                            subTitle = `L1: ${l1.name || 'N/A'}`;
+                                            mainMetricLabel = 'Total Realized Profit';
+                                            mainMetricValue = totalProfit.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
                                         }
 
                                         return (
                                             <div key={a.id} onClick={() => handleLoad(a)} className="group flex flex-col bg-white border border-slate-200 rounded-xl p-5 hover:shadow-lg hover:border-primary/30 transition-all cursor-pointer relative overflow-hidden">
-                                                <div className={`absolute top-0 right-0 px-2 py-1 rounded-bl-lg text-[9px] font-black uppercase tracking-wider ${isCalc ? 'bg-blue-50 text-blue-600' : isSched ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                                                    {isCalc ? 'Costing' : isSched ? 'Schedule' : 'Quantities'}
+                                                <div className={`absolute top-0 right-0 px-2 py-1 rounded-bl-lg text-[9px] font-black uppercase tracking-wider ${isCalc ? 'bg-blue-50 text-blue-600' : isSched ? 'bg-amber-50 text-amber-600' : isQuant ? 'bg-emerald-50 text-emerald-600' : 'bg-purple-50 text-purple-600'}`}>
+                                                    {isCalc ? 'Costing' : isSched ? 'Schedule' : isQuant ? 'Quantities' : 'Analysis'}
                                                 </div>
                                                 <div className="flex justify-between items-start mb-4 mt-2">
                                                     <div className="flex flex-col gap-0.5">
@@ -351,7 +387,7 @@ export default function SavedArchives({ onLoad }) {
                                                 <div className="mt-auto pt-4 border-t border-slate-50 flex justify-between items-end">
                                                     <div className="flex flex-col">
                                                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{mainMetricLabel}</span>
-                                                        <span className={`text-sm font-black ${isQuant ? 'text-emerald-600' : 'text-slate-900'}`}>{mainMetricValue}</span>
+                                                        <span className={`text-sm font-black ${isQuant || a.type === 'cost_analysis' ? 'text-emerald-600' : 'text-slate-900'}`}>{mainMetricValue}</span>
                                                     </div>
                                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity relative z-20" onClick={(e) => e.stopPropagation()}>
                                                         <button
@@ -535,13 +571,44 @@ export default function SavedArchives({ onLoad }) {
                                         subTitle = `${prods.length} Products`;
                                         mainMetricLabel = 'Est. Net Profit';
                                         mainMetricValue = prods.reduce((s, p) => s + ((Number(p.customerPrice) - Number(p.vendorCost)) * (Number(p.qty) || 0)), 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+                                    } else if (a.type === 'cost_analysis') {
+                                        const vendorsList = Array.isArray(a.data) ? a.data : (a.data?.vendors || []);
+                                        // Calculate Metrics (Duplicated logic for detail view)
+                                        const calculated = vendorsList.map(v => {
+                                            const base = parseFloat(v.basePrice) || 0;
+                                            const freight = parseFloat(v.freight) || 0;
+                                            const days = parseFloat(v.creditDays) || 0;
+                                            const qty = parseFloat(v.quantity) || 0;
+                                            const interestRate = parseFloat(v.interestRate) || 12;
+                                            const creditSavings = (base * days * (interestRate / 100)) / 365;
+                                            const tco = base + freight - creditSavings;
+
+                                            const sellingPrice = parseFloat(v.sellingPrice) || 0;
+                                            const customerDays = parseFloat(v.customerCreditDays) || 0;
+                                            const cashGapDays = customerDays - days;
+                                            const revenue = sellingPrice * qty;
+                                            const cogs = tco * qty;
+                                            const grossMargin = revenue - cogs;
+                                            const financingCost = (tco * cashGapDays * (interestRate / 100)) / 365;
+                                            const totalFinancingCost = financingCost * qty;
+                                            const netProfit = grossMargin - totalFinancingCost;
+                                            return { ...v, tco, netProfit };
+                                        });
+
+                                        const l1 = calculated.reduce((prev, curr) => (prev.tco < curr.tco) ? prev : curr, calculated[0] || {});
+                                        const totalProfit = calculated.reduce((sum, v) => sum + (v.netProfit || 0), 0);
+
+                                        title = a.data?.recordName || a.data?.companyName || 'Cost Analysis';
+                                        subTitle = `L1: ${l1.name || 'N/A'}`;
+                                        mainMetricLabel = 'Total Realized Profit';
+                                        mainMetricValue = totalProfit.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
                                     }
 
                                     return (
                                         <div key={a.id} onClick={() => handleLoad(a)} className="group flex flex-col bg-white border border-slate-200 rounded-xl p-5 hover:shadow-lg hover:border-primary/30 transition-all cursor-pointer relative overflow-hidden">
                                             {/* Type Badge */}
-                                            <div className={`absolute top-0 right-0 px-2 py-1 rounded-bl-lg text-[9px] font-black uppercase tracking-wider ${isCalc ? 'bg-blue-50 text-blue-600' : isSched ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                                                {isCalc ? 'Costing' : isSched ? 'Schedule' : 'Quantities'}
+                                            <div className={`absolute top-0 right-0 px-2 py-1 rounded-bl-lg text-[9px] font-black uppercase tracking-wider ${isCalc ? 'bg-blue-50 text-blue-600' : isSched ? 'bg-amber-50 text-amber-600' : isQuant ? 'bg-emerald-50 text-emerald-600' : 'bg-purple-50 text-purple-600'}`}>
+                                                {isCalc ? 'Costing' : isSched ? 'Schedule' : isQuant ? 'Quantities' : 'Analysis'}
                                             </div>
 
                                             <div className="flex justify-between items-start mb-4 mt-2">
@@ -554,7 +621,7 @@ export default function SavedArchives({ onLoad }) {
                                             <div className="mt-auto pt-4 border-t border-slate-50 flex justify-between items-end">
                                                 <div className="flex flex-col">
                                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{mainMetricLabel}</span>
-                                                    <span className={`text-sm font-black ${isQuant ? 'text-emerald-600' : 'text-slate-900'}`}>{mainMetricValue}</span>
+                                                    <span className={`text-sm font-black ${isQuant || a.type === 'cost_analysis' ? 'text-emerald-600' : 'text-slate-900'}`}>{mainMetricValue}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity relative z-20" onClick={(e) => e.stopPropagation()}>
                                                     <button

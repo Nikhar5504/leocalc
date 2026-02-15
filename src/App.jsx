@@ -5,6 +5,8 @@ import SupplySchedule from './components/SupplySchedule';
 import SavedArchives from './components/SavedArchives';
 import Login from './components/Login';
 import QuantitiesDashboard from './components/QuantitiesDashboard';
+import CostAnalysis from './components/CostAnalysis';
+import MarginSimulator from './components/MarginSimulator';
 import { supabase } from './lib/supabase';
 
 function App() {
@@ -115,6 +117,15 @@ function App() {
     { id: 3, name: 'Widget C - Economy', qty: 200, vendorCost: 150, customerPrice: 180 },
   ]));
 
+  // --- Vendor Comparison State (Lifted & Persisted) ---
+  // --- Cost Analysis State (Lifted & Persisted) ---
+  const [costAnalysisData, setCostAnalysisData] = useState(() => loadState('leocalc_costAnalysisData', [
+    { id: 1, name: 'Acme Global Mfg', maxCapacity: 50000, basePrice: 110, freight: 8.50, creditDays: 60, productName: 'Standard Widget', quantity: 1000 },
+    { id: 2, name: 'Precision Components', maxCapacity: 30000, basePrice: 111, freight: 12.20, creditDays: 30, productName: 'Premium Widget', quantity: 500 }
+  ]));
+
+  useEffect(() => { localStorage.setItem('leocalc_costAnalysisData', JSON.stringify(costAnalysisData)); }, [costAnalysisData]);
+
   // Persistence Effects
   useEffect(() => { localStorage.setItem('leocalc_poDetails', JSON.stringify(poDetails)); }, [poDetails]);
   useEffect(() => { localStorage.setItem('leocalc_vendors', JSON.stringify(vendors)); }, [vendors]);
@@ -143,10 +154,12 @@ function App() {
     const isCalculator = activeTab === 'calculator';
     const isSupply = activeTab === 'supply';
     const isQuantities = activeTab === 'quantities';
+    const isProcurement = activeTab === 'procurement';
 
     let defaultName = '';
     if (isSupply) defaultName = poDetails.customerName || '';
     if (isQuantities) defaultName = 'Product Analysis';
+    if (isProcurement) defaultName = 'Vendor Quote ' + new Date().toISOString().split('T')[0];
 
     let type = 'calculator';
     let payload = {};
@@ -160,6 +173,9 @@ function App() {
     } else if (isQuantities) {
       type = 'quantities';
       payload = { products };
+    } else if (activeTab === 'cost_analysis') {
+      type = 'cost_analysis';
+      payload = { vendors: costAnalysisData };
     }
 
     // Fetch existing companies
@@ -185,6 +201,7 @@ function App() {
     const isCalculator = activeTab === 'calculator';
     const isSupply = activeTab === 'supply';
     const isQuantities = activeTab === 'quantities';
+    const isProcurement = activeTab === 'procurement';
 
     let type = 'calculator';
     let payload = {};
@@ -198,6 +215,9 @@ function App() {
     } else if (isQuantities) {
       type = 'quantities';
       payload = { products };
+    } else if (activeTab === 'cost_analysis') {
+      type = 'cost_analysis';
+      payload = { vendors: costAnalysisData };
     }
 
     const finalPayload = { ...payload, companyName: editingCompanyName, recordName: editingRecordName };
@@ -296,7 +316,12 @@ function App() {
     } else if (archive.type === 'quantities') {
       if (archive.data.products) setProducts(archive.data.products);
       setActiveTab('quantities');
+    } else if (archive.type === 'cost_analysis' || archive.type === 'vendor_comparison') {
+      // Backward compatibility for 'vendor_comparison'
+      if (archive.data.vendors) setCostAnalysisData(archive.data.vendors);
+      setActiveTab('cost_analysis');
     }
+
     if (archive.id) {
       setEditingArchiveId(archive.id); // Enable Edit Mode
       // CRITICAL FIX: Prioritize DB column over JSON blob to prevent reverting renames
@@ -395,6 +420,9 @@ function App() {
               <button onClick={() => handleTabChange('quantities')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'quantities' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}>
                 <span className="material-symbols-outlined text-[16px]">calculate</span> Quantities
               </button>
+              <button onClick={() => handleTabChange('cost_analysis')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'cost_analysis' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}>
+                <span className="material-symbols-outlined text-[16px]">analytics</span> Cost Analysis
+              </button>
               <button onClick={() => handleTabChange('archives')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'archives' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}>
                 <span className="material-symbols-outlined text-[16px]">folder_open</span> Archives
               </button>
@@ -451,6 +479,12 @@ function App() {
               />
             ) : activeTab === 'quantities' ? (
               <QuantitiesDashboard products={products} setProducts={setProducts} />
+            ) : activeTab === 'cost_analysis' ? (
+              <CostAnalysis
+                vendors={costAnalysisData}
+                setVendors={setCostAnalysisData}
+                onSave={handleSaveConfig}
+              />
             ) : (
               <SavedArchives onLoad={handleLoadArchive} />
             )}
