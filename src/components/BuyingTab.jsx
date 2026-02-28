@@ -20,11 +20,8 @@ export default function BuyingTab({ vendors, setVendors }) {
             const qty = parseFloat(vendor.quantity) || 0;
             const interestRate = parseFloat(vendor.interestRate) || 12;
 
-            // Credit Savings Logic (Using individual interest rate)
-            const creditSavings = (base * days * (interestRate / 100)) / 365;
-
-            // TCO (True Landed Cost) - Per Unit
-            const tco = base + freight - creditSavings;
+            // TCO (True Landed Cost) - Per Unit (No theoretical credit savings deducted)
+            const tco = base + freight;
             const tcoTotal = tco * qty;
 
             // Selling Data
@@ -41,20 +38,18 @@ export default function BuyingTab({ vendors, setVendors }) {
             // Gross Margin (Before Interest)
             const grossMargin = revenue - cogs;
 
-            // Interest Cost (Financing the Cash Gap on TCO val)
-            // If Gap is positive (Customer pays LATER than we pay Vendor), we BORROW -> Cost.
-            // If Gap is negative (Customer pays SOONER), we EARN -> Benefit (Negative Cost).
-            const financingCost = (tco * cashGapDays * (interestRate / 100)) / 365;
+            // Bank Loan Interest Cost (Financing the Cash Gap)
+            // Bank interest applies only if we need a loan (Gap > 0).
+            const financingCost = cashGapDays > 0 ? (tco * cashGapDays * (interestRate / 100)) / 365 : 0;
             const totalFinancingCost = financingCost * qty;
 
-            // Realized Margin (Net Profit)
+            // Realized Margin (Net Profit after Bank Loan Cost)
             const netProfit = grossMargin - totalFinancingCost;
             const marginPercent = revenue > 0 ? (netProfit / revenue) * 100 : 0;
 
             return {
                 ...vendor,
                 base, freight, days, qty,
-                creditSavings,
                 tco,
                 tcoTotal,
                 interestRate,
@@ -423,10 +418,10 @@ export default function BuyingTab({ vendors, setVendors }) {
                                     {/* Interest Cost */}
                                     <td className="px-5 py-4 align-top text-right bg-slate-50/30 border-r border-slate-100">
                                         <div className="flex flex-col items-end">
-                                            <span className={`text-base font-bold tracking-tight ${row.totalFinancingCost > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                                                {row.totalFinancingCost > 0 ? '-' : '+'}₹{Math.abs(row.totalFinancingCost).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                                            <span className={`text-base font-bold tracking-tight ${row.totalFinancingCost > 0 ? 'text-rose-600' : 'text-slate-400'}`}>
+                                                {row.totalFinancingCost > 0 ? '-' : ''}₹{Math.abs(row.totalFinancingCost).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                                             </span>
-                                            <span className="text-[10px] text-slate-400 font-bold mt-0.5">COST</span>
+                                            <span className="text-[10px] text-slate-400 font-bold mt-0.5">BANK COST</span>
                                         </div>
                                     </td>
 

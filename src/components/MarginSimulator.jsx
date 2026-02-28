@@ -8,7 +8,7 @@ export default function PaymentDelayCalculator() {
         productName: 'Industrial Steel Components',
         vendorCost: 42500,
         sellingPrice: 58000,
-        roi: 12.5,
+        bankInterestRate: 12.5,
         paymentDelay: 75
     });
 
@@ -19,14 +19,14 @@ export default function PaymentDelayCalculator() {
     const results = useMemo(() => {
         const cost = parseFloat(inputs.vendorCost) || 0;
         const price = parseFloat(inputs.sellingPrice) || 0;
-        const roi = parseFloat(inputs.roi) || 0;
+        const bankInterestRate = parseFloat(inputs.bankInterestRate) || 0;
         const days = parseFloat(inputs.paymentDelay) || 0;
 
         const grossProfit = price - cost;
         const grossMargin = price > 0 ? (grossProfit / price) * 100 : 0;
 
-        // Financing Cost: (Cost * Days * (ROI/100)) / 365
-        const financingCost = (cost * days * (roi / 100)) / 365;
+        // Financing Cost (Bank Loan Cost): (Cost * Days * (Bank Interest Rate / 100)) / 365
+        const financingCost = (cost * days * (bankInterestRate / 100)) / 365;
 
         const netRealProfit = grossProfit - financingCost;
         const netRealMargin = price > 0 ? (netRealProfit / price) * 100 : 0;
@@ -57,7 +57,7 @@ export default function PaymentDelayCalculator() {
                     <p className="text-sm text-slate-500 font-medium mt-1">Analyze how payment delays and financing costs erode your actual profit margins.</p>
                 </div>
                 <button
-                    onClick={() => setInputs({ productName: '', vendorCost: 0, sellingPrice: 0, roi: 12, paymentDelay: 0 })}
+                    onClick={() => setInputs({ productName: '', vendorCost: 0, sellingPrice: 0, bankInterestRate: 12, paymentDelay: 0 })}
                     className="text-slate-400 hover:text-primary transition-colors flex items-center gap-1 text-xs font-bold uppercase tracking-wider"
                 >
                     <RotateCcw size={14} /> Reset
@@ -181,10 +181,10 @@ export default function PaymentDelayCalculator() {
                                     <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Financing Parameters</h3>
                                 </div>
                                 <div className="p-6 space-y-8">
-                                    {/* Annual ROI Input */}
+                                    {/* Bank Interest Rate Input */}
                                     <div>
                                         <div className="flex justify-between items-end mb-2">
-                                            <label className="text-xs font-bold text-slate-400 uppercase">Cost of Capital (Annual Interest %)</label>
+                                            <label className="text-xs font-bold text-slate-400 uppercase">Bank Rate of Interest (% Per Annum)</label>
                                         </div>
                                         <div className="flex gap-4 items-center">
                                             <div className="relative w-32 shrink-0">
@@ -192,8 +192,8 @@ export default function PaymentDelayCalculator() {
                                                     type="number"
                                                     step="0.1"
                                                     className="w-full text-lg font-bold text-slate-900 border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary rounded-md px-3 py-2 text-right pr-8 border"
-                                                    value={inputs.roi}
-                                                    onChange={(e) => handleChange('roi', e.target.value)}
+                                                    value={inputs.bankInterestRate}
+                                                    onChange={(e) => handleChange('bankInterestRate', e.target.value)}
                                                 />
                                                 <span className="absolute right-3 top-3.5 text-slate-400 font-bold text-xs">%</span>
                                             </div>
@@ -201,8 +201,8 @@ export default function PaymentDelayCalculator() {
                                                 type="range"
                                                 min="0" max="30" step="0.5"
                                                 className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-600"
-                                                value={inputs.roi}
-                                                onChange={(e) => handleChange('roi', e.target.value)}
+                                                value={inputs.bankInterestRate}
+                                                onChange={(e) => handleChange('bankInterestRate', e.target.value)}
                                             />
                                         </div>
                                     </div>
