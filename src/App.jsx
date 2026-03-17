@@ -21,6 +21,7 @@ function App() {
   const [saveModalConfig, setSaveModalConfig] = useState({ type: '', payload: {}, defaultName: '' });
   const [selectedCompany, setSelectedCompany] = useState('');
   const [newCompanyInput, setNewCompanyInput] = useState('');
+  const [newRecordName, setNewRecordName] = useState('');
 
   // Edit Mode State
   const [editingArchiveId, setEditingArchiveId] = useState(null);
@@ -190,6 +191,7 @@ function App() {
     setSaveModalConfig({ type, payload, defaultName });
     setSelectedCompany('');
     setNewCompanyInput(defaultName);
+    setNewRecordName('');
     setShowSaveModal(true);
   };
 
@@ -253,7 +255,11 @@ function App() {
 
     // Update payload with company name if needed for internal consistency (though DB col is distinct)
     const finalPayload = { ...saveModalConfig.payload, companyName };
-    if (editingRecordName) finalPayload.recordName = editingRecordName;
+    if (newRecordName && newRecordName.trim() !== "") {
+      finalPayload.recordName = newRecordName.trim();
+    } else if (editingRecordName) {
+      finalPayload.recordName = editingRecordName;
+    }
 
     try {
       let error;
@@ -525,6 +531,16 @@ function App() {
                     />
                   </label>
                 )}
+
+                <label className="flex flex-col gap-2 animate-fade-in mt-2">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Configuration Name (Optional)</span>
+                  <input
+                    className="form-input rounded-lg border-slate-200 text-sm font-medium focus:ring-primary focus:border-primary"
+                    placeholder="e.g. Q3 Pricing Setup"
+                    value={newRecordName}
+                    onChange={(e) => setNewRecordName(e.target.value)}
+                  />
+                </label>
               </div>
               <div className="p-4 bg-gray-50 flex justify-end gap-3">
                 <button

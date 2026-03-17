@@ -373,6 +373,11 @@ export default function SavedArchives({ onLoad }) {
                                             mainMetricValue = totalProfit.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
                                         }
 
+                                        const formattedDate = new Date(a.created_at).toLocaleString('en-US', {
+                                            month: 'short', day: 'numeric', year: 'numeric',
+                                            hour: 'numeric', minute: '2-digit', hour12: true
+                                        });
+
                                         return (
                                             <div key={a.id} onClick={() => handleLoad(a)} className="group flex flex-col bg-white border border-slate-200 rounded-xl p-5 hover:shadow-lg hover:border-primary/30 transition-all cursor-pointer relative overflow-hidden">
                                                 <div className={`absolute top-0 right-0 px-2 py-1 rounded-bl-lg text-[9px] font-black uppercase tracking-wider ${isCalc ? 'bg-blue-50 text-blue-600' : isSched ? 'bg-amber-50 text-amber-600' : isQuant ? 'bg-emerald-50 text-emerald-600' : 'bg-purple-50 text-purple-600'}`}>
@@ -383,6 +388,7 @@ export default function SavedArchives({ onLoad }) {
                                                         <h3 className="text-sm font-black text-slate-800 group-hover:text-primary transition-colors truncate w-40">{title}</h3>
                                                         <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{subTitle}</span>
                                                     </div>
+                                                    <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap mt-1">{formattedDate}</span>
                                                 </div>
                                                 <div className="mt-auto pt-4 border-t border-slate-50 flex justify-between items-end">
                                                     <div className="flex flex-col">
@@ -604,6 +610,11 @@ export default function SavedArchives({ onLoad }) {
                                         mainMetricValue = totalProfit.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
                                     }
 
+                                    const formattedDate = new Date(a.created_at).toLocaleString('en-US', {
+                                        month: 'short', day: 'numeric', year: 'numeric',
+                                        hour: 'numeric', minute: '2-digit', hour12: true
+                                    });
+
                                     return (
                                         <div key={a.id} onClick={() => handleLoad(a)} className="group flex flex-col bg-white border border-slate-200 rounded-xl p-5 hover:shadow-lg hover:border-primary/30 transition-all cursor-pointer relative overflow-hidden">
                                             {/* Type Badge */}
@@ -616,6 +627,7 @@ export default function SavedArchives({ onLoad }) {
                                                     <h3 className="text-sm font-black text-slate-800 group-hover:text-primary transition-colors truncate w-40">{title}</h3>
                                                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{subTitle}</span>
                                                 </div>
+                                                <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap mt-1">{formattedDate}</span>
                                             </div>
 
                                             <div className="mt-auto pt-4 border-t border-slate-50 flex justify-between items-end">
