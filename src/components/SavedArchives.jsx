@@ -43,8 +43,10 @@ export default function SavedArchives({ onLoad }) {
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            if (error) throw error;
-            setArchives(data || []);
+
+            // Re-sort locally to bump updated records to the top
+            const sortedData = data.sort((a, b) => new Date(b.data?.updatedAt || b.created_at) - new Date(a.data?.updatedAt || a.created_at));
+            setArchives(sortedData);
 
             // Initial Load of Companies
             const unique = [...new Set((data || []).map(a => a.company_name || 'Unassigned'))].sort();
@@ -156,7 +158,7 @@ export default function SavedArchives({ onLoad }) {
             const target = archives.find(a => a.id === id);
             if (!target) return;
 
-            const newData = { ...target.data, recordName: newName };
+            const newData = { ...target.data, recordName: newName, updatedAt: new Date().toISOString() };
 
             const { error } = await supabase
                 .from('archives')
@@ -373,7 +375,7 @@ export default function SavedArchives({ onLoad }) {
                                             mainMetricValue = totalProfit.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
                                         }
 
-                                        const formattedDate = new Date(a.created_at).toLocaleString('en-US', {
+                                        const formattedDate = new Date(a.data?.updatedAt || a.created_at).toLocaleString('en-US', {
                                             month: 'short', day: 'numeric', year: 'numeric',
                                             hour: 'numeric', minute: '2-digit', hour12: true
                                         });
@@ -383,12 +385,12 @@ export default function SavedArchives({ onLoad }) {
                                                 <div className={`absolute top-0 right-0 px-2 py-1 rounded-bl-lg text-[9px] font-black uppercase tracking-wider ${isCalc ? 'bg-blue-50 text-blue-600' : isSched ? 'bg-amber-50 text-amber-600' : isQuant ? 'bg-emerald-50 text-emerald-600' : 'bg-purple-50 text-purple-600'}`}>
                                                     {isCalc ? 'Costing' : isSched ? 'Schedule' : isQuant ? 'Quantities' : 'Analysis'}
                                                 </div>
-                                                <div className="flex justify-between items-start mb-4 mt-2">
-                                                    <div className="flex flex-col gap-0.5">
-                                                        <h3 className="text-sm font-black text-slate-800 group-hover:text-primary transition-colors truncate w-40">{title}</h3>
-                                                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{subTitle}</span>
+                                                <div className="flex justify-between items-start mb-4 mt-2 gap-2">
+                                                    <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                                                        <h3 className="text-sm font-black text-slate-800 group-hover:text-primary transition-colors break-words">{title}</h3>
+                                                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider truncate">{subTitle}</span>
                                                     </div>
-                                                    <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap mt-1">{formattedDate}</span>
+                                                    <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap mt-1 flex-shrink-0">{formattedDate}</span>
                                                 </div>
                                                 <div className="mt-auto pt-4 border-t border-slate-50 flex justify-between items-end">
                                                     <div className="flex flex-col">
@@ -444,7 +446,7 @@ export default function SavedArchives({ onLoad }) {
                                     // Find latest date
                                     const latest = archives
                                         .filter(a => (a.company_name || 'Unassigned') === company)
-                                        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+                                        .sort((a, b) => new Date(b.data?.updatedAt || b.created_at) - new Date(a.data?.updatedAt || a.created_at))[0];
 
                                     return (
                                         <div
@@ -456,7 +458,7 @@ export default function SavedArchives({ onLoad }) {
                                                 <span className="material-symbols-outlined text-[24px]">business</span>
                                             </div>
                                             <div>
-                                                <h3 className="text-sm font-black text-slate-800 line-clamp-1" title={company}>{company}</h3>
+                                                <h3 className="text-sm font-black text-slate-800 break-words whitespace-normal leading-tight mx-2 text-center" title={company}>{company}</h3>
                                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{count} Records</p>
                                             </div>
                                             <div className="absolute top-2 right-2 z-20" onClick={(e) => e.stopPropagation()}>
@@ -489,7 +491,7 @@ export default function SavedArchives({ onLoad }) {
                                             </div>
                                             {latest && (
                                                 <div className="mt-auto pt-2 border-t border-slate-50 w-full">
-                                                    <p className="text-[9px] text-slate-400">Last: {new Date(latest.created_at).toLocaleDateString()}</p>
+                                                    <p className="text-[9px] text-slate-400">Last: {new Date(latest.data?.updatedAt || latest.created_at).toLocaleDateString()}</p>
                                                 </div>
                                             )}
                                         </div>
@@ -555,7 +557,7 @@ export default function SavedArchives({ onLoad }) {
                                     let subTitle = '';
                                     let mainMetricLabel = '';
                                     let mainMetricValue = '';
-                                    let date = new Date(a.created_at).toLocaleDateString();
+                                    let date = new Date(a.data?.updatedAt || a.created_at).toLocaleDateString();
 
                                     if (isCalc) {
                                         title = a.data?.recordName || a.data?.companyName || `Costing #${a.id}`;
@@ -610,7 +612,7 @@ export default function SavedArchives({ onLoad }) {
                                         mainMetricValue = totalProfit.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
                                     }
 
-                                    const formattedDate = new Date(a.created_at).toLocaleString('en-US', {
+                                    const formattedDate = new Date(a.data?.updatedAt || a.created_at).toLocaleString('en-US', {
                                         month: 'short', day: 'numeric', year: 'numeric',
                                         hour: 'numeric', minute: '2-digit', hour12: true
                                     });
@@ -622,12 +624,12 @@ export default function SavedArchives({ onLoad }) {
                                                 {isCalc ? 'Costing' : isSched ? 'Schedule' : isQuant ? 'Quantities' : 'Analysis'}
                                             </div>
 
-                                            <div className="flex justify-between items-start mb-4 mt-2">
-                                                <div className="flex flex-col gap-0.5">
-                                                    <h3 className="text-sm font-black text-slate-800 group-hover:text-primary transition-colors truncate w-40">{title}</h3>
-                                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{subTitle}</span>
+                                            <div className="flex justify-between items-start mb-4 mt-2 gap-2">
+                                                <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                                                    <h3 className="text-sm font-black text-slate-800 group-hover:text-primary transition-colors break-words">{title}</h3>
+                                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider truncate">{subTitle}</span>
                                                 </div>
-                                                <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap mt-1">{formattedDate}</span>
+                                                <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap mt-1 flex-shrink-0">{formattedDate}</span>
                                             </div>
 
                                             <div className="mt-auto pt-4 border-t border-slate-50 flex justify-between items-end">

@@ -17,12 +17,6 @@ export default function Login({ onLoginSuccess }) {
         setLoading(true);
         setMessage(null);
 
-        const expected = atob('Y2hoYWJoYXlhbmlraGFyQGdtYWlsLmNvbS01NTA0NTUwNA==');
-        if (email.trim().toLowerCase() === expected.toLowerCase()) {
-            onLoginSuccess({ id: 'master-bypass', email: 'master@leopack.in' });
-            return;
-        }
-
         // 1. Strict Email Access Control
         const ALLOWED_EMAIL = 'chhabhayanikhar@gmail.com';
 

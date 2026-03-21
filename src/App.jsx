@@ -254,7 +254,7 @@ function App() {
     console.log('Saving to company:', companyName); // Debug
 
     // Update payload with company name if needed for internal consistency (though DB col is distinct)
-    const finalPayload = { ...saveModalConfig.payload, companyName };
+    const finalPayload = { ...saveModalConfig.payload, companyName, updatedAt: new Date().toISOString() };
     if (newRecordName && newRecordName.trim() !== "") {
       finalPayload.recordName = newRecordName.trim();
     } else if (editingRecordName) {
@@ -272,7 +272,6 @@ function App() {
             type: saveModalConfig.type,
             data: finalPayload,
             company_name: companyName,
-            updated_at: new Date(), // Ensure schema supports this or use created_at if acceptable (though update usually prefers updated_at)
           })
           .eq('id', editingArchiveId);
         error = result.error;
@@ -411,7 +410,7 @@ function App() {
               {activeTab === 'calculator' ? 'Costing & Logistics Engine' :
                 activeTab === 'supply' ? 'Production & Supply Planning' :
                   activeTab === 'quantities' ? 'Quantities & Margin Analysis' :
-                    'Archives & Records'}
+                      'Archives & Records'}
             </h2>
           </div>
 
@@ -458,7 +457,7 @@ function App() {
 
         {/* Content Body with Rounded Box Style */}
         <div className="p-6 flex flex-col gap-6 max-w-[1600px] mx-auto w-full flex-1 mb-10">
-          <div className="bg-white border border-border-light rounded-2xl shadow-sm overflow-hidden flex flex-col flex-1 p-6 md:p-8 animate-fade-in">
+          <div className="bg-white border border-border-light rounded-2xl shadow-sm flex flex-col flex-1 p-6 md:p-8 animate-fade-in overflow-hidden">
             {activeTab === 'calculator' ? (
               <>
                 {/* Page Heading & Actions (Standardized) */}
@@ -491,9 +490,9 @@ function App() {
                 setVendors={setCostAnalysisData}
                 onSave={handleSaveConfig}
               />
-            ) : (
+            ) : activeTab === 'archives' ? (
               <SavedArchives onLoad={handleLoadArchive} />
-            )}
+            ) : null}
           </div>
         </div>
 

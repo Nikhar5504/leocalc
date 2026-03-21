@@ -1,0 +1,893 @@
+{
+  "synced_at": "2026-03-17T18:14:00+05:30",
+  "invoices": [
+    {
+      "invoice_id": "2276445000001051003",
+      "invoice_number": "1251591422078",
+      "customer_name": "TCL INTERMEDIATES PRIVATE LIMITED",
+      "date": "2026-03-16",
+      "due_date": "2026-04-15",
+      "status": "sent",
+      "total": 206387.66,
+      "balance": 206387.66,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Flexible Intermediate Bulk Container",
+          "description": "Printed (OLD - TCLIPL) 500 kg capacity FIBC bag (95 x 95 x 85 cm) with inside lamination (200 gauge), no liner. Top spout Dia 35 x 50 cm, bottom spout Dia 68 x 75 cm, safety bottom spout Dia 68 x 32 cm. ±6%, dust-proof seams, printed front/back in blue & black with red logo. TQS No. 20 D2.",
+          "unit": "nos.",
+          "quantity": 609,
+          "rate": 287.2,
+          "item_total": 174904.8
+        }
+      ]
+    },
+    {
+      "invoice_id": "2276445000001028003",
+      "invoice_number": "1251591422077",
+      "customer_name": "AARTI INDUSTRIES LIMITED",
+      "date": "2026-03-14",
+      "due_date": "2026-04-28",
+      "status": "sent",
+      "total": 20762.1,
+      "balance": 20762.1,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Flexible Intermediate Bulk Container",
+          "description": "95 x 95 x 150",
+          "unit": "nos.",
+          "quantity": 51,
+          "rate": 345,
+          "item_total": 17595
+        }
+      ]
+    },
+    {
+      "invoice_id": "2276445000001026143",
+      "invoice_number": "1251591422076",
+      "customer_name": "AARTI INDUSTRIES LIMITED",
+      "date": "2026-03-13",
+      "due_date": "2026-04-27",
+      "status": "sent",
+      "total": 203550,
+      "balance": 203550,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Flexible Intermediate Bulk Container",
+          "description": "95 x 95 x 150",
+          "unit": "nos.",
+          "quantity": 500,
+          "rate": 345,
+          "item_total": 172500
+        }
+      ]
+    },
+    {
+      "invoice_id": "2276445000001026110",
+      "invoice_number": "1251591422075",
+      "customer_name": "AARTI INDUSTRIES LIMITED",
+      "date": "2026-03-13",
+      "due_date": "2026-04-27",
+      "status": "sent",
+      "total": 401200,
+      "balance": 401200,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Flexible Intermediate Bulk Container",
+          "description": "95 x 95 x 150",
+          "unit": "nos.",
+          "quantity": 1000,
+          "rate": 340,
+          "item_total": 340000
+        }
+      ]
+    },
+    {
+      "invoice_id": "2276445000000992007",
+      "invoice_number": "1251591422074",
+      "customer_name": "TCL INTERMEDIATES PRIVATE LIMITED",
+      "date": "2026-03-06",
+      "due_date": "2026-04-05",
+      "status": "sent",
+      "total": 948244.57,
+      "balance": 948244.57,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Flexible Intermediate Bulk Container",
+          "description": "Printed (TCLIPL) 500 kg capacity FIBC bag (95 x 95 x 85 cm) with inside lamination (200 gauge), no liner. Top spout Dia 35 x 50 cm, bottom spout Dia 68 x 75 cm, safety bottom spout Dia 68 x 32 cm. ±6%, dust-proof seams, printed front/back in blue & black with red logo. TQS No. 20 D2.",
+          "unit": "nos.",
+          "quantity": 2800,
+          "rate": 287.2,
+          "item_total": 804160
+        }
+      ]
+    },
+    {
+      "invoice_id": "2276445000000902100",
+      "invoice_number": "1251591422071",
+      "customer_name": "TCL INTERMEDIATES PRIVATE LIMITED",
+      "date": "2026-02-13",
+      "due_date": "2026-03-15",
+      "status": "overdue",
+      "total": 1032909.25,
+      "balance": 1032909.25,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Flexible Intermediate Bulk Container",
+          "description": "Printed (TCLIPL) 500 kg capacity FIBC bag (95 x 95 x 85 cm) with inside lamination (200 gauge), no liner. Top spout Dia 35 x 50 cm, bottom spout Dia 68 x 75 cm, safety bottom spout Dia 68 x 32 cm. ±6%, dust-proof seams, printed front/back in blue & black with red logo. TQS No. 20 D2.",
+          "unit": "nos.",
+          "quantity": 3050,
+          "rate": 287.2,
+          "item_total": 875960
+        }
+      ]
+    },
+    {
+      "invoice_id": "2276445000000900073",
+      "invoice_number": "1251591422072",
+      "customer_name": "AARTI INDUSTRIES LIMITED",
+      "date": "2026-02-13",
+      "due_date": "2026-03-15",
+      "status": "paid",
+      "total": 180540,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Flexible Intermediate Bulk Container",
+          "description": "95 x 95 x 150",
+          "unit": "nos.",
+          "quantity": 450,
+          "rate": 340,
+          "item_total": 153000
+        }
+      ]
+    },
+    {
+      "invoice_id": "2276445000000898015",
+      "invoice_number": "1251591422070",
+      "customer_name": "TCL INTERMEDIATES PRIVATE LIMITED",
+      "date": "2026-02-12",
+      "due_date": "2026-03-14",
+      "status": "overdue",
+      "total": 880512.82,
+      "balance": 880512.82,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Flexible Intermediate Bulk Container",
+          "description": "Printed (TCLIPL) 500 kg capacity FIBC bag (95 x 95 x 85 cm) with inside lamination (200 gauge), no liner. Top spout Dia 35 x 50 cm, bottom spout Dia 68 x 75 cm, safety bottom spout Dia 68 x 32 cm. ±6%, dust-proof seams, printed front/back in blue & black with red logo. TQS No. 20 D2.",
+          "unit": "nos.",
+          "quantity": 2600,
+          "rate": 287.2,
+          "item_total": 746720
+        }
+      ]
+    },
+    {
+      "invoice_id": "2276445000000868118",
+      "invoice_number": "1251591422069",
+      "customer_name": "TCL INTERMEDIATES PRIVATE LIMITED",
+      "date": "2026-02-04",
+      "due_date": "2026-03-06",
+      "status": "overdue",
+      "total": 1151439.82,
+      "balance": 1151439.82,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Flexible Intermediate Bulk Container",
+          "description": "Printed (TCLIPL) 500 kg capacity FIBC bag (95 x 95 x 85 cm) with inside lamination (200 gauge), no liner. Top spout Dia 35 x 50 cm, bottom spout Dia 68 x 75 cm, safety bottom spout Dia 68 x 32 cm. ±6%, dust-proof seams, printed front/back in blue & black with red logo. TQS No. 20 D2.",
+          "unit": "nos.",
+          "quantity": 3400,
+          "rate": 287.2,
+          "item_total": 976480
+        }
+      ]
+    },
+    {
+      "invoice_id": "2276445000000868007",
+      "invoice_number": "1251591422068",
+      "customer_name": "TCL INTERMEDIATES PRIVATE LIMITED",
+      "date": "2026-02-04",
+      "due_date": "2026-03-06",
+      "status": "overdue",
+      "total": 100091.38,
+      "balance": 100091.38,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Flexible Intermediate Bulk Container",
+          "description": "Printed (TCLIPL) 500 kg capacity FIBC bag (95 x 95 x 85 cm) with inside lamination (200 gauge), no liner. Top spout Dia 35 x 50 cm, bottom spout Dia 68 x 75 cm, safety bottom spout Dia 68 x 32 cm. ±6%, dust-proof seams, printed front/back in blue & black with red logo. TQS No. 20 D2.",
+          "unit": "nos.",
+          "quantity": 300,
+          "rate": 282.744,
+          "item_total": 84823.2
+        }
+      ]
+    },
+    {
+      "invoice_id": "2276445000000862061",
+      "invoice_number": "1251591422067",
+      "customer_name": "AARTI INDUSTRIES LIMITED",
+      "date": "2026-02-03",
+      "due_date": "2026-03-05",
+      "status": "paid",
+      "total": 200600,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Flexible Intermediate Bulk Container",
+          "description": "95 x 95 x 150",
+          "unit": "nos.",
+          "quantity": 500,
+          "rate": 340,
+          "item_total": 170000
+        }
+      ]
+    },
+    {
+      "invoice_id": "2276445000000803009",
+      "invoice_number": "1251591422065",
+      "customer_name": "TCL INTERMEDIATES PRIVATE LIMITED",
+      "date": "2026-01-19",
+      "due_date": "2026-03-05",
+      "status": "overdue",
+      "total": 984231.86,
+      "balance": 984231.86,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Flexible Intermediate Bulk Container",
+          "description": "Printed (TCLIPL) 500 kg capacity FIBC bag (95 x 95 x 85 cm) with inside lamination (200 gauge), no liner. Top spout Dia 35 x 50 cm, bottom spout Dia 68 x 75 cm, safety bottom spout Dia 68 x 32 cm. ±6%, dust-proof seams, printed front/back in blue & black with red logo. TQS No. 20 D2.",
+          "unit": "nos.",
+          "quantity": 2950,
+          "rate": 282.744,
+          "item_total": 834094.8
+        }
+      ]
+    },
+    {
+      "invoice_id": "2276445000000760005",
+      "invoice_number": "1251591422064",
+      "customer_name": "TCL INTERMEDIATES PRIVATE LIMITED",
+      "date": "2026-01-10",
+      "due_date": "2026-02-09",
+      "status": "paid",
+      "total": 834094.8,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Flexible Intermediate Bulk Container",
+          "description": "Printed (TCLIPL) 500 kg capacity FIBC bag (95 x 95 x 85 cm) with inside lamination (200 gauge), no liner. Top spout Dia 35 x 50 cm, bottom spout Dia 68 x 75 cm, safety bottom spout Dia 68 x 32 cm. ±6%, dust-proof seams, printed front/back in blue & black with red logo. TQS No. 20 D2.",
+          "unit": "nos.",
+          "quantity": 2500,
+          "rate": 282.744,
+          "item_total": 706860
+        }
+      ]
+    },
+    {
+      "invoice_id": "2276445000000742009",
+      "invoice_number": "1251591422063",
+      "customer_name": "TCL INTERMEDIATES PRIVATE LIMITED",
+      "date": "2026-01-06",
+      "due_date": "2026-02-05",
+      "status": "paid",
+      "total": 33363.32,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Flexible Intermediate Bulk Container",
+          "description": "Printed (TCLIPL) 500 kg capacity FIBC bag (95 x 95 x 85 cm) with inside lamination (200 gauge), no liner. Top spout Dia 35 x 50 cm, bottom spout Dia 68 x 75 cm, safety bottom spout Dia 68 x 32 cm. ±6%, dust-proof seams, printed front/back in blue & black with red logo. TQS No. 20 D2.",
+          "unit": "nos.",
+          "quantity": 100,
+          "rate": 282.74,
+          "item_total": 28274
+        }
+      ]
+    },
+    {
+      "invoice_id": "2276445000000740066",
+      "invoice_number": "1251591422062",
+      "customer_name": "TCL INTERMEDIATES PRIVATE LIMITED",
+      "date": "2026-01-05",
+      "due_date": "2026-02-04",
+      "status": "paid",
+      "total": 33363.32,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Flexible Intermediate Bulk Container",
+          "description": "Printed (TCLIPL) 500 kg capacity FIBC bag (95 x 95 x 85 cm) with inside lamination (200 gauge), no liner. Top spout Dia 35 x 50 cm, bottom spout Dia 68 x 75 cm, safety bottom spout Dia 68 x 32 cm. ±6%, dust-proof seams, printed front/back in blue & black with red logo. TQS No. 20 D2.",
+          "unit": "nos.",
+          "quantity": 100,
+          "rate": 282.74,
+          "item_total": 28274
+        }
+      ]
+    },
+    {
+      "invoice_id": "2276445000000740033",
+      "invoice_number": "1251591422061",
+      "customer_name": "TCL INTERMEDIATES PRIVATE LIMITED",
+      "date": "2026-01-05",
+      "due_date": "2026-02-04",
+      "status": "paid",
+      "total": 1251124.5,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Flexible Intermediate Bulk Container",
+          "description": "Printed (TCLIPL) 500 kg capacity FIBC bag (95 x 95 x 85 cm) with inside lamination (200 gauge), no liner. Top spout Dia 35 x 50 cm, bottom spout Dia 68 x 75 cm, safety bottom spout Dia 68 x 32 cm. ±6%, dust-proof seams, printed front/back in blue & black with red logo. TQS No. 20 D2.",
+          "unit": "nos.",
+          "quantity": 3750,
+          "rate": 282.74,
+          "item_total": 1060275
+        }
+      ]
+    },
+    {
+      "invoice_id": "2276445000000701223",
+      "invoice_number": "1251591422060",
+      "customer_name": "THIRUMALAI CHEMICALS LIMITED.",
+      "date": "2025-12-25",
+      "due_date": "2026-01-24",
+      "status": "paid",
+      "total": 344355.18,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Flexible Intermediate Bulk Container",
+          "description": "Printed (TCL - Ranipet) 500 kg capacity FIBC bag (95 x 95 x 85 cm) with inside lamination (200 gauge), no liner. Top spout Dia 35 x 50 cm, bottom spout Dia 68 x 75 cm, safety bottom spout Dia 68 x 32 cm. ±6%, dust-proof seams, printed front/back in blue & black with red logo.",
+          "unit": "nos.",
+          "quantity": 986,
+          "rate": 295.97,
+          "item_total": 291826.42
+        }
+      ]
+    },
+    {
+      "invoice_id": "2276445000000684255",
+      "invoice_number": "1251591422059",
+      "customer_name": "TCL INTERMEDIATES PRIVATE LIMITED",
+      "date": "2025-12-18",
+      "due_date": "2026-01-17",
+      "status": "paid",
+      "total": 133453.28,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Flexible Intermediate Bulk Container",
+          "description": "Printed (TCLIPL) 500 kg capacity FIBC bag (95 x 95 x 85 cm) with inside lamination (200 gauge), no liner. Top spout Dia 35 x 50 cm, bottom spout Dia 68 x 75 cm, safety bottom spout Dia 68 x 32 cm. ±6%, dust-proof seams, printed front/back in blue & black with red logo. TQS No. 20 D2.",
+          "unit": "nos.",
+          "quantity": 400,
+          "rate": 282.74,
+          "item_total": 113096
+        }
+      ]
+    },
+    {
+      "invoice_id": "2276445000000684007",
+      "invoice_number": "1251591422058",
+      "customer_name": "TCL INTERMEDIATES PRIVATE LIMITED",
+      "date": "2025-12-18",
+      "due_date": "2026-01-17",
+      "status": "paid",
+      "total": 800153.28,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Flexible Intermediate Bulk Container",
+          "description": "Printed (TCLIPL) 500 kg capacity FIBC bag (95 x 95 x 85 cm) with inside lamination (200 gauge), no liner. Top spout Dia 35 x 50 cm, bottom spout Dia 68 x 75 cm, safety bottom spout Dia 68 x 32 cm. ±6%, dust-proof seams, printed front/back in blue & black with red logo. TQS No. 20 D2.",
+          "unit": "nos.",
+          "quantity": 2400,
+          "rate": 282.54,
+          "item_total": 678096
+        }
+      ]
+    },
+    {
+      "invoice_id": "2276445000000651007",
+      "invoice_number": "1251591422057",
+      "customer_name": "TCL INTERMEDIATES PRIVATE LIMITED",
+      "date": "2025-12-10",
+      "due_date": "2026-01-09",
+      "status": "paid",
+      "total": 1266909.36,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Flexible Intermediate Bulk Container",
+          "description": "Printed (TCLIPL) 500 kg capacity FIBC bag (95 x 95 x 85 cm) with inside lamination (200 gauge), no liner. Top spout Dia 35 x 50 cm, bottom spout Dia 68 x 75 cm, safety bottom spout Dia 68 x 32 cm. ±6%, dust-proof seams, printed front/back in blue & black with red logo. TQS No. 20 D2.",
+          "unit": "nos.",
+          "quantity": 3800,
+          "rate": 282.54,
+          "item_total": 1073652
+        }
+      ]
+    },
+    {
+      "invoice_id": "2276445000000632037",
+      "invoice_number": "1251591422056",
+      "customer_name": "ADANI NEW INDUSTRIES LIMITED",
+      "date": "2025-12-04",
+      "due_date": "2026-01-03",
+      "status": "paid",
+      "total": 519200,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Flexible Intermediate Bulk Container",
+          "description": "90 x 90 x 90",
+          "unit": "nos.",
+          "quantity": 2000,
+          "rate": 220,
+          "item_total": 440000
+        }
+      ]
+    }
+  ],
+  "bills": [
+    {
+      "bill_id": "2276445000001054064",
+      "bill_number": "MW25-26/832",
+      "vendor_name": "MAYUR WOVENS (P) LTD",
+      "date": "2026-03-16",
+      "due_date": "2026-03-16",
+      "status": "overdue",
+      "total": 185045,
+      "balance": 360,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "PP Woven Fabric",
+          "unit": "kgs",
+          "quantity": 6500,
+          "rate": 28.5
+        }
+      ]
+    },
+    {
+      "bill_id": "2276445000001054036",
+      "bill_number": "12515101",
+      "vendor_name": "LEO SALES CORPRATION",
+      "date": "2026-03-13",
+      "due_date": "2026-04-27",
+      "status": "open",
+      "total": 558205,
+      "balance": 558205,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "FIBC Bag Components",
+          "unit": "nos.",
+          "quantity": 750,
+          "rate": 630
+        }
+      ]
+    },
+    {
+      "bill_id": "2276445000001008003",
+      "bill_number": "207/25-26",
+      "vendor_name": "DAMA LOGISTICS",
+      "date": "2026-01-31",
+      "due_date": "2026-01-31",
+      "status": "paid",
+      "total": 12000,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Transportation Charges",
+          "unit": "trips",
+          "quantity": 4,
+          "rate": 3000
+        }
+      ]
+    },
+    {
+      "bill_id": "2276445000000902068",
+      "bill_number": "SIL/252622230",
+      "vendor_name": "SHISH INDUSTRIES LIMITED",
+      "date": "2026-02-13",
+      "due_date": "2026-03-15",
+      "status": "overdue",
+      "total": 965612,
+      "balance": 965612,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "FIBC Raw Materials",
+          "unit": "nos.",
+          "quantity": 3100,
+          "rate": 250
+        }
+      ]
+    },
+    {
+      "bill_id": "2276445000000902044",
+      "bill_number": "12515093",
+      "vendor_name": "LEO SALES CORPRATION",
+      "date": "2026-02-13",
+      "due_date": "2026-03-30",
+      "status": "open",
+      "total": 148680,
+      "balance": 148680,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "FIBC Components",
+          "unit": "nos.",
+          "quantity": 270,
+          "rate": 466
+        }
+      ]
+    },
+    {
+      "bill_id": "2276445000000899027",
+      "bill_number": "SIL/252622228",
+      "vendor_name": "SHISH INDUSTRIES LIMITED",
+      "date": "2026-02-12",
+      "due_date": "2026-03-14",
+      "status": "overdue",
+      "total": 522380.1,
+      "balance": 522380.1,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "FIBC Raw Materials",
+          "unit": "nos.",
+          "quantity": 2650,
+          "rate": 167
+        }
+      ]
+    },
+    {
+      "bill_id": "2276445000000899003",
+      "bill_number": "SIL/252622227",
+      "vendor_name": "SHISH INDUSTRIES LIMITED",
+      "date": "2026-02-12",
+      "due_date": "2026-03-14",
+      "status": "overdue",
+      "total": 300988.5,
+      "balance": 300988.5,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "FIBC Raw Materials",
+          "unit": "nos.",
+          "quantity": 1500,
+          "rate": 170
+        }
+      ]
+    },
+    {
+      "bill_id": "2276445000000868294",
+      "bill_number": "12515092",
+      "vendor_name": "LEO SALES CORPRATION",
+      "date": "2026-02-03",
+      "due_date": "2026-03-20",
+      "status": "paid",
+      "total": 159300,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "FIBC Components",
+          "unit": "nos.",
+          "quantity": 200,
+          "rate": 675
+        }
+      ]
+    },
+    {
+      "bill_id": "2276445000000868270",
+      "bill_number": "MW/25-26753",
+      "vendor_name": "MAYUR WOVENS (P) LTD",
+      "date": "2026-02-03",
+      "due_date": "2026-02-03",
+      "status": "paid",
+      "total": 758150,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "PP Woven Fabric",
+          "unit": "kgs",
+          "quantity": 26600,
+          "rate": 28.5
+        }
+      ]
+    },
+    {
+      "bill_id": "2276445000000810155",
+      "bill_number": "SIL/252622117",
+      "vendor_name": "SHISH INDUSTRIES LIMITED",
+      "date": "2026-01-19",
+      "due_date": "2026-03-05",
+      "status": "overdue",
+      "total": 934648.5,
+      "balance": 934648.5,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "FIBC Raw Materials",
+          "unit": "nos.",
+          "quantity": 2950,
+          "rate": 268
+        }
+      ]
+    },
+    {
+      "bill_id": "2276445000000810093",
+      "bill_number": "672036625191",
+      "vendor_name": "MAYUR WOVENS (P) LTD",
+      "date": "2026-01-09",
+      "due_date": "2026-01-09",
+      "status": "paid",
+      "total": 758150,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "PP Woven Fabric",
+          "unit": "kgs",
+          "quantity": 26600,
+          "rate": 28.5
+        }
+      ]
+    },
+    {
+      "bill_id": "2276445000000810031",
+      "bill_number": "642036616154",
+      "vendor_name": "MAYUR WOVENS (P) LTD",
+      "date": "2026-01-09",
+      "due_date": "2026-01-09",
+      "status": "paid",
+      "total": 368160,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "PP Woven Fabric",
+          "unit": "kgs",
+          "quantity": 12900,
+          "rate": 28.5
+        }
+      ]
+    },
+    {
+      "bill_id": "2276445000000810003",
+      "bill_number": "SIL/252622047",
+      "vendor_name": "SHISH INDUSTRIES LIMITED",
+      "date": "2026-01-05",
+      "due_date": "2026-02-04",
+      "status": "paid",
+      "total": 1251479,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "FIBC Raw Materials",
+          "unit": "nos.",
+          "quantity": 3800,
+          "rate": 278
+        }
+      ]
+    },
+    {
+      "bill_id": "2276445000000752055",
+      "bill_number": "182/25-26",
+      "vendor_name": "DAMA LOGISTICS",
+      "date": "2025-12-31",
+      "due_date": "2025-12-31",
+      "status": "paid",
+      "total": 54000,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "Transportation",
+          "unit": "trips",
+          "quantity": 18,
+          "rate": 3000
+        }
+      ]
+    },
+    {
+      "bill_id": "2276445000000752027",
+      "bill_number": "SIL/252621991",
+      "vendor_name": "SHISH INDUSTRIES LIMITED",
+      "date": "2025-12-25",
+      "due_date": "2026-01-24",
+      "status": "paid",
+      "total": 328101,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "FIBC Raw Materials",
+          "unit": "nos.",
+          "quantity": 1100,
+          "rate": 252.5
+        }
+      ]
+    },
+    {
+      "bill_id": "2276445000000752003",
+      "bill_number": "SIL/252621949",
+      "vendor_name": "SHISH INDUSTRIES LIMITED",
+      "date": "2025-12-18",
+      "due_date": "2026-01-17",
+      "status": "paid",
+      "total": 887124,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "FIBC Raw Materials",
+          "unit": "nos.",
+          "quantity": 2400,
+          "rate": 313
+        }
+      ]
+    },
+    {
+      "bill_id": "2276445000000751131",
+      "bill_number": "SIL/252621850",
+      "vendor_name": "SHISH INDUSTRIES LIMITED",
+      "date": "2025-12-04",
+      "due_date": "2026-01-03",
+      "status": "paid",
+      "total": 476720,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "FIBC Raw Materials",
+          "unit": "nos.",
+          "quantity": 400,
+          "rate": 1009
+        }
+      ]
+    },
+    {
+      "bill_id": "2276445000000751003",
+      "bill_number": "MW/25-26/602",
+      "vendor_name": "MAYUR WOVENS (P) LTD",
+      "date": "2025-12-09",
+      "due_date": "2025-12-09",
+      "status": "paid",
+      "total": 1165840,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "PP Woven Fabric",
+          "unit": "kgs",
+          "quantity": 40900,
+          "rate": 28.5
+        }
+      ]
+    },
+    {
+      "bill_id": "2276445000000615051",
+      "bill_number": "SIL/252621779",
+      "vendor_name": "SHISH INDUSTRIES LIMITED",
+      "date": "2025-11-20",
+      "due_date": "2025-12-20",
+      "status": "paid",
+      "total": 156350,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "FIBC Raw Materials",
+          "unit": "nos.",
+          "quantity": 500,
+          "rate": 265
+        }
+      ]
+    },
+    {
+      "bill_id": "2276445000000615027",
+      "bill_number": "SIL/252621735",
+      "vendor_name": "SHISH INDUSTRIES LIMITED",
+      "date": "2025-11-12",
+      "due_date": "2025-12-12",
+      "status": "paid",
+      "total": 744550.5,
+      "balance": 0,
+      "currency_code": "INR",
+      "line_items": [
+        {
+          "name": "FIBC Raw Materials",
+          "unit": "nos.",
+          "quantity": 2500,
+          "rate": 252.4
+        }
+      ]
+    }
+  ],
+  "purchase_orders": [
+    {
+      "po_id": "2276445000000954001",
+      "order_number": "PO-5698905",
+      "vendor_name": "SHISH INDUSTRIES LIMITED",
+      "date": "2026-02-25",
+      "status": "open",
+      "total": 3315800,
+      "currency_code": "INR"
+    },
+    {
+      "po_id": "2276445000000953019",
+      "order_number": "PO-5698904",
+      "vendor_name": "SHIV SAI PACKAGING",
+      "date": "2026-02-25",
+      "status": "open",
+      "total": 28320,
+      "currency_code": "INR"
+    },
+    {
+      "po_id": "2276445000000943019",
+      "order_number": "PO-5698903",
+      "vendor_name": "SHREE GANESH INDUSTRIES",
+      "date": "2026-02-20",
+      "status": "open",
+      "total": 96642,
+      "currency_code": "INR"
+    },
+    {
+      "po_id": "2276445000000906001",
+      "order_number": "PO-5698902",
+      "vendor_name": "SHISH INDUSTRIES LIMITED",
+      "date": "2026-02-14",
+      "status": "open",
+      "total": 3315800,
+      "currency_code": "INR"
+    },
+    {
+      "po_id": "2276445000000887001",
+      "order_number": "PO-5698901",
+      "vendor_name": "SHISH INDUSTRIES LIMITED",
+      "date": "2026-02-11",
+      "status": "open",
+      "total": 660800,
+      "currency_code": "INR"
+    },
+    {
+      "po_id": "2276445000000862001",
+      "order_number": "PO-5698899",
+      "vendor_name": "SHISH INDUSTRIES LIMITED",
+      "date": "2026-02-03",
+      "status": "open",
+      "total": 1640200,
+      "currency_code": "INR"
+    },
+    {
+      "po_id": "2276445000000842001",
+      "order_number": "PO-5698898",
+      "vendor_name": "SHISH INDUSTRIES LIMITED",
+      "date": "2026-01-30",
+      "status": "open",
+      "total": 1563500,
+      "currency_code": "INR"
+    }
+  ]
+}

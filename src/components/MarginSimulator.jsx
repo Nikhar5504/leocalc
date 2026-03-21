@@ -9,7 +9,8 @@ export default function PaymentDelayCalculator() {
         vendorCost: 42500,
         sellingPrice: 58000,
         bankInterestRate: 12.5,
-        paymentDelay: 75
+        customerDays: 75,
+        vendorDays: 45
     });
 
     const handleChange = (field, value) => {
@@ -20,7 +21,9 @@ export default function PaymentDelayCalculator() {
         const cost = parseFloat(inputs.vendorCost) || 0;
         const price = parseFloat(inputs.sellingPrice) || 0;
         const bankInterestRate = parseFloat(inputs.bankInterestRate) || 0;
-        const days = parseFloat(inputs.paymentDelay) || 0;
+        const customerDays = parseFloat(inputs.customerDays) || 0;
+        const vendorDays = parseFloat(inputs.vendorDays) || 0;
+        const days = Math.max(0, customerDays - vendorDays); // Cash Gap
 
         const grossProfit = price - cost;
         const grossMargin = price > 0 ? (grossProfit / price) * 100 : 0;
@@ -41,7 +44,8 @@ export default function PaymentDelayCalculator() {
             netRealProfit,
             netRealMargin,
             interestErosion,
-            profitLoss
+            profitLoss,
+            days
         };
     }, [inputs]);
 
@@ -52,12 +56,12 @@ export default function PaymentDelayCalculator() {
                 <div>
                     <h2 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-3">
                         <Calculator className="text-amber-600" size={28} />
-                        Payment Delay Calculator
+                        Cash Gap Calculator
                     </h2>
-                    <p className="text-sm text-slate-500 font-medium mt-1">Analyze how payment delays and financing costs erode your actual profit margins.</p>
+                    <p className="text-sm text-slate-500 font-medium mt-1">Analyze how the cash gap between vendor payments and customer receipts erodes profit margins.</p>
                 </div>
                 <button
-                    onClick={() => setInputs({ productName: '', vendorCost: 0, sellingPrice: 0, bankInterestRate: 12, paymentDelay: 0 })}
+                    onClick={() => setInputs({ productName: '', vendorCost: 0, sellingPrice: 0, bankInterestRate: 12, customerDays: 0, vendorDays: 0 })}
                     className="text-slate-400 hover:text-primary transition-colors flex items-center gap-1 text-xs font-bold uppercase tracking-wider"
                 >
                     <RotateCcw size={14} /> Reset
@@ -207,33 +211,69 @@ export default function PaymentDelayCalculator() {
                                         </div>
                                     </div>
 
-                                    {/* Payment Delay Input (Unlimited) */}
+                                    {/* Customer Days Input */}
                                     <div>
                                         <div className="flex justify-between items-end mb-2">
-                                            <label className="text-xs font-bold text-slate-400 uppercase">Total Payment Delay Period</label>
+                                            <label className="text-xs font-bold text-emerald-600 uppercase">Customer Payment Terms</label>
                                         </div>
                                         <div className="flex gap-4 items-center">
                                             <div className="relative w-32 shrink-0">
                                                 <input
                                                     type="number"
                                                     min="0"
-                                                    className="w-full text-lg font-bold text-amber-600 border-slate-200 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-md px-3 py-2 text-right pr-10 border"
-                                                    value={inputs.paymentDelay}
-                                                    onChange={(e) => handleChange('paymentDelay', e.target.value)}
+                                                    className="w-full text-lg font-bold text-emerald-700 border-emerald-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded-md px-3 py-2 text-right pr-10 border"
+                                                    value={inputs.customerDays}
+                                                    onChange={(e) => handleChange('customerDays', e.target.value)}
                                                 />
-                                                <span className="absolute right-3 top-3.5 text-slate-400 font-bold text-xs">Days</span>
+                                                <span className="absolute right-3 top-3.5 text-emerald-400 font-bold text-xs">Days</span>
                                             </div>
                                             <div className="flex-1">
                                                 <input
                                                     type="range"
                                                     min="0" max="365" step="1"
-                                                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-500"
-                                                    value={Math.min(inputs.paymentDelay, 365)} // Slider caps at 365 for visual, but input is unlimited
-                                                    onChange={(e) => handleChange('paymentDelay', e.target.value)}
+                                                    className="w-full h-2 bg-emerald-100 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                                                    value={Math.min(inputs.customerDays, 365)}
+                                                    onChange={(e) => handleChange('customerDays', e.target.value)}
                                                 />
-                                                <p className="text-[10px] text-slate-400 font-medium mt-1">Use the input box for delays {'>'} 365 days.</p>
                                             </div>
                                         </div>
+                                    </div>
+
+                                    {/* Vendor Days Input */}
+                                    <div>
+                                        <div className="flex justify-between items-end mb-2">
+                                            <label className="text-xs font-bold text-blue-600 uppercase">Vendor Credit Terms</label>
+                                        </div>
+                                        <div className="flex gap-4 items-center">
+                                            <div className="relative w-32 shrink-0">
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    className="w-full text-lg font-bold text-blue-700 border-blue-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-md px-3 py-2 text-right pr-10 border"
+                                                    value={inputs.vendorDays}
+                                                    onChange={(e) => handleChange('vendorDays', e.target.value)}
+                                                />
+                                                <span className="absolute right-3 top-3.5 text-blue-400 font-bold text-xs">Days</span>
+                                            </div>
+                                            <div className="flex-1">
+                                                <input
+                                                    type="range"
+                                                    min="0" max="365" step="1"
+                                                    className="w-full h-2 bg-blue-100 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                                    value={Math.min(inputs.vendorDays, 365)}
+                                                    onChange={(e) => handleChange('vendorDays', e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Cash Gap Output Badge */}
+                                    <div className="flex justify-between items-center bg-slate-50 border border-slate-200 p-4 rounded-xl mt-4">
+                                        <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">Calculated Cash Gap</span>
+                                        <span className={`text-xl font-black ${results.days > 0 ? 'text-amber-600' : 'text-emerald-600'} flex items-center gap-2`}>
+                                            <Clock size={20} />
+                                            {results.days} Days
+                                        </span>
                                     </div>
                                 </div>
                             </section>
@@ -277,11 +317,11 @@ export default function PaymentDelayCalculator() {
                                     <ul className="space-y-3 text-xs">
                                         <li className="flex justify-between">
                                             <span className="text-slate-500 font-medium">Daily Cost of Carry:</span>
-                                            <span className="font-bold text-slate-700">₹{((results.financingCost / results.grossProfit) * results.grossProfit / (inputs.paymentDelay || 1)).toFixed(2)}/day</span>
+                                            <span className="font-bold text-slate-700">₹{results.days > 0 && results.grossProfit > 0 ? (((results.financingCost / results.grossProfit) * results.grossProfit / results.days)).toFixed(2) : 0}/day</span>
                                         </li>
                                         <li className="flex justify-between">
                                             <span className="text-slate-500 font-medium">Monthly Impact:</span>
-                                            <span className="font-bold text-slate-700">₹{(((results.financingCost / results.grossProfit) * results.grossProfit / (inputs.paymentDelay || 1)) * 30).toFixed(0)}/mo</span>
+                                            <span className="font-bold text-slate-700">₹{results.days > 0 && results.grossProfit > 0 ? (((results.financingCost / results.grossProfit) * results.grossProfit / results.days) * 30).toFixed(0) : 0}/mo</span>
                                         </li>
                                     </ul>
                                 </div>

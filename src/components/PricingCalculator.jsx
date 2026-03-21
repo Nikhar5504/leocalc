@@ -15,7 +15,7 @@ export default function PricingCalculator({ inputs, onChange }) {
     const transportPerKg = bagWeightKg > 0 ? transportPerBag / bagWeightKg : 0;
     const adjConversionPerKg = conversionCost + transportPerBag;
 
-    const bagPrice = vendorCostPerBag * (1 + profitMargin / 100);
+    const bagPrice = profitMargin >= 100 ? vendorCostPerBag * 100 : vendorCostPerBag / (1 - profitMargin / 100);
     const netProfit = bagPrice - vendorCostPerBag;
     const customerPricePerKg = bagWeightKg > 0 ? bagPrice / bagWeightKg : 0;
     const customerConversionPerKg = customerPricePerKg - ppRate;
