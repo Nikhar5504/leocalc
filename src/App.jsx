@@ -118,6 +118,8 @@ function App() {
     { id: 3, name: 'Widget C - Economy', qty: 200, vendorCost: 150, customerPrice: 180 },
   ]));
 
+  const [globalFreight, setGlobalFreight] = useState(() => loadState('leocalc_globalFreight', 0));
+
   // --- Vendor Comparison State (Lifted & Persisted) ---
   // --- Cost Analysis State (Lifted & Persisted) ---
   const [costAnalysisData, setCostAnalysisData] = useState(() => loadState('leocalc_costAnalysisData', [
@@ -132,6 +134,7 @@ function App() {
   useEffect(() => { localStorage.setItem('leocalc_vendors', JSON.stringify(vendors)); }, [vendors]);
   useEffect(() => { localStorage.setItem('leocalc_supplies', JSON.stringify(supplies)); }, [supplies]);
   useEffect(() => { localStorage.setItem('leocalc_products', JSON.stringify(products)); }, [products]);
+  useEffect(() => { localStorage.setItem('leocalc_globalFreight', JSON.stringify(globalFreight)); }, [globalFreight]);
 
 
   const handlePricingChange = (e) => {
@@ -320,6 +323,7 @@ function App() {
       setActiveTab('supply');
     } else if (archive.type === 'quantities') {
       if (archive.data.products) setProducts(archive.data.products);
+      if (archive.data.globalFreight !== undefined) setGlobalFreight(archive.data.globalFreight);
       setActiveTab('quantities');
     } else if (archive.type === 'cost_analysis' || archive.type === 'vendor_comparison') {
       // Backward compatibility for 'vendor_comparison'
@@ -483,7 +487,7 @@ function App() {
                 supplies={supplies} setSupplies={setSupplies}
               />
             ) : activeTab === 'quantities' ? (
-              <QuantitiesDashboard products={products} setProducts={setProducts} />
+              <QuantitiesDashboard products={products} setProducts={setProducts} globalFreight={globalFreight} setGlobalFreight={setGlobalFreight} />
             ) : activeTab === 'cost_analysis' ? (
               <CostAnalysis
                 vendors={costAnalysisData}

@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
 
-export default function QuantitiesDashboard({ products, setProducts }) {
+export default function QuantitiesDashboard({ products, setProducts, globalFreight, setGlobalFreight }) {
     const stats = useMemo(() => {
         let totalRevenue = 0;
         let totalCost = 0;
         let totalSalesVolume = 0;
         let totalNetProfit = 0;
         let productCount = products.length;
+        let cGlobalFreight = Number(globalFreight) || 0;
 
         products.forEach(p => {
             const qty = Number(p.qty) || 0;
@@ -31,6 +32,9 @@ export default function QuantitiesDashboard({ products, setProducts }) {
             totalNetProfit += netProfit;
         });
 
+        const rawTotalProfit = totalNetProfit;
+        totalNetProfit -= cGlobalFreight;
+
         const netMargin = totalRevenue > 0 ? (totalNetProfit / totalRevenue) * 100 : 0;
         const avgProfitPerProduct = productCount > 0 ? totalNetProfit / productCount : 0;
 
@@ -42,7 +46,7 @@ export default function QuantitiesDashboard({ products, setProducts }) {
             totalRevenue,
             totalCost
         };
-    }, [products]);
+    }, [products, globalFreight]);
 
 
     const [editingMargin, setEditingMargin] = useState({ id: null, val: '' });
@@ -137,10 +141,24 @@ export default function QuantitiesDashboard({ products, setProducts }) {
                                 <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest min-w-[120px] text-right border-r border-slate-100">Qty</th>
 
                                 {/* Buying Inputs */}
-                                <th className="px-5 py-4 text-[10px] font-black text-blue-400 uppercase tracking-widest min-w-[140px] bg-blue-50/30">Base Price</th>
-                                <th className="px-5 py-4 text-[10px] font-black text-blue-400 uppercase tracking-widest min-w-[100px] bg-blue-50/30 text-right">Int. Rate %</th>
-                                <th className="px-5 py-4 text-[10px] font-black text-blue-400 uppercase tracking-widest min-w-[120px] bg-blue-50/30">Freight</th>
-                                <th className="px-5 py-4 text-[10px] font-black text-blue-400 uppercase tracking-widest min-w-[130px] bg-blue-50/50 border-r border-blue-100">Vendor Terms</th>
+                                <th className="px-5 py-4 text-[10px] font-black text-blue-400 uppercase tracking-widest min-w-[140px] bg-blue-50/30 align-top">Base Price</th>
+                                <th className="px-5 py-4 text-[10px] font-black text-blue-400 uppercase tracking-widest min-w-[100px] bg-blue-50/30 text-right align-top">Int. Rate %</th>
+                                <th className="px-5 py-3 text-[10px] font-black text-blue-400 uppercase tracking-widest min-w-[120px] bg-blue-50/30 align-top">
+                                    <div className="flex flex-col gap-1.5 w-full">
+                                        <span className="py-1">Freight (Pcs)</span>
+                                        <div className="relative rounded shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] flex items-center bg-white/60 border border-blue-200/60 transition-all focus-within:ring-1 focus-within:ring-blue-400 focus-within:border-blue-400">
+                                            <span className="text-[9px] font-black px-1.5 text-blue-500" title="Global Total Freight Deduction">TOTAL</span>
+                                            <input
+                                                type="number"
+                                                className="w-full bg-transparent border-0 py-1 px-1 text-blue-700 text-[11px] font-bold focus:ring-0 text-right placeholder-blue-300 placeholder:font-medium text-right font-mono"
+                                                placeholder="₹0"
+                                                value={globalFreight || ''}
+                                                onChange={(e) => setGlobalFreight(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                </th>
+                                <th className="px-5 py-4 text-[10px] font-black text-blue-400 uppercase tracking-widest min-w-[130px] bg-blue-50/50 border-r border-blue-100 align-top">Vendor Terms</th>
 
                                 {/* Selling Inputs */}
                                 <th className="px-5 py-4 text-[10px] font-black text-emerald-500 uppercase tracking-widest min-w-[140px] bg-emerald-50/30 pl-6">Selling Price</th>
