@@ -127,7 +127,10 @@ function App() {
     { id: 2, name: 'Precision Components', maxCapacity: 30000, basePrice: 111, freight: 12.20, creditDays: 30, productName: 'Premium Widget', quantity: 500 }
   ]));
 
+  const [costMatrixConfig, setCostMatrixConfig] = useState(() => loadState('leocalc_costMatrixConfig', { isFIBCMode: false, gstSlab: 18 }));
+
   useEffect(() => { localStorage.setItem('leocalc_costAnalysisData', JSON.stringify(costAnalysisData)); }, [costAnalysisData]);
+  useEffect(() => { localStorage.setItem('leocalc_costMatrixConfig', JSON.stringify(costMatrixConfig)); }, [costMatrixConfig]);
 
   // Persistence Effects
   useEffect(() => { localStorage.setItem('leocalc_poDetails', JSON.stringify(poDetails)); }, [poDetails]);
@@ -135,6 +138,9 @@ function App() {
   useEffect(() => { localStorage.setItem('leocalc_supplies', JSON.stringify(supplies)); }, [supplies]);
   useEffect(() => { localStorage.setItem('leocalc_products', JSON.stringify(products)); }, [products]);
   useEffect(() => { localStorage.setItem('leocalc_globalFreight', JSON.stringify(globalFreight)); }, [globalFreight]);
+
+  const [quantitiesConfig, setQuantitiesConfig] = useState(() => loadState('leocalc_quantitiesConfig', { isFIBCMode: false, gstSlab: 18 }));
+  useEffect(() => { localStorage.setItem('leocalc_quantitiesConfig', JSON.stringify(quantitiesConfig)); }, [quantitiesConfig]);
 
 
   const handlePricingChange = (e) => {
@@ -176,7 +182,7 @@ function App() {
       payload = { poDetails, vendors, supplies };
     } else if (isQuantities) {
       type = 'quantities';
-      payload = { products };
+      payload = { products, globalFreight, config: quantitiesConfig };
     } else if (activeTab === 'cost_analysis') {
       type = 'cost_analysis';
       payload = { vendors: costAnalysisData };
@@ -219,7 +225,7 @@ function App() {
       payload = { poDetails, vendors, supplies };
     } else if (isQuantities) {
       type = 'quantities';
-      payload = { products };
+      payload = { products, globalFreight, config: quantitiesConfig };
     } else if (activeTab === 'cost_analysis') {
       type = 'cost_analysis';
       payload = { vendors: costAnalysisData };
@@ -324,10 +330,12 @@ function App() {
     } else if (archive.type === 'quantities') {
       if (archive.data.products) setProducts(archive.data.products);
       if (archive.data.globalFreight !== undefined) setGlobalFreight(archive.data.globalFreight);
+      if (archive.data.config) setQuantitiesConfig(archive.data.config);
       setActiveTab('quantities');
     } else if (archive.type === 'cost_analysis' || archive.type === 'vendor_comparison') {
       // Backward compatibility for 'vendor_comparison'
       if (archive.data.vendors) setCostAnalysisData(archive.data.vendors);
+      if (archive.data.config) setCostMatrixConfig(archive.data.config);
       setActiveTab('cost_analysis');
     }
 
@@ -487,11 +495,13 @@ function App() {
                 supplies={supplies} setSupplies={setSupplies}
               />
             ) : activeTab === 'quantities' ? (
-              <QuantitiesDashboard products={products} setProducts={setProducts} globalFreight={globalFreight} setGlobalFreight={setGlobalFreight} />
+              <QuantitiesDashboard products={products} setProducts={setProducts} globalFreight={globalFreight} setGlobalFreight={setGlobalFreight} config={quantitiesConfig} setConfig={setQuantitiesConfig} />
             ) : activeTab === 'cost_analysis' ? (
               <CostAnalysis
                 vendors={costAnalysisData}
                 setVendors={setCostAnalysisData}
+                config={costMatrixConfig}
+                setConfig={setCostMatrixConfig}
                 onSave={handleSaveConfig}
               />
             ) : activeTab === 'archives' ? (

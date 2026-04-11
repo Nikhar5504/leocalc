@@ -1,7 +1,9 @@
 import React, { useState, useMemo } from 'react';
 
-export default function QuantitiesDashboard({ products, setProducts, globalFreight, setGlobalFreight }) {
+export default function QuantitiesDashboard({ products, setProducts, globalFreight, setGlobalFreight, config, setConfig }) {
     const stats = useMemo(() => {
+        let isFIBCMode = config?.isFIBCMode || false;
+        let gstSlab = config?.gstSlab ?? 18;
         let totalRevenue = 0;
         let totalCost = 0;
         let totalSalesVolume = 0;
@@ -11,7 +13,10 @@ export default function QuantitiesDashboard({ products, setProducts, globalFreig
 
         products.forEach(p => {
             const qty = Number(p.qty) || 0;
-            const basePrice = Number(p.vendorCost) || 0; // Using vendorCost for backward compatibility
+            const rawMaterial = Number(p.rawMaterial) || 0;
+            const conversion = Number(p.conversion) || 0;
+            const bagWeight = Number(p.bagWeight) || 0;
+            const basePrice = isFIBCMode ? ((rawMaterial + conversion) * bagWeight) : (Number(p.vendorCost) || 0);
             const freight = Number(p.freight) || 0;
             const tco = basePrice + freight;
             
@@ -21,7 +26,8 @@ export default function QuantitiesDashboard({ products, setProducts, globalFreig
             const interestRate = Number(p.interestRate ?? 12) || 0;
 
             const cashGapDays = customerDays - vendorDays;
-            const financingCost = cashGapDays > 0 ? (tco * cashGapDays * (interestRate / 100)) / 365 : 0;
+            const tcoWithGst = tco * (1 + gstSlab / 100);
+            const financingCost = cashGapDays > 0 ? (tcoWithGst * cashGapDays * (interestRate / 100)) / 365 : 0;
             
             const grossMargin = (sellingPrice - tco) * qty;
             const netProfit = grossMargin - (financingCost * qty);
@@ -46,7 +52,7 @@ export default function QuantitiesDashboard({ products, setProducts, globalFreig
             totalRevenue,
             totalCost
         };
-    }, [products, globalFreight]);
+    }, [products, globalFreight, config]);
 
 
     const [editingMargin, setEditingMargin] = useState({ id: null, val: '' });
@@ -70,7 +76,7 @@ export default function QuantitiesDashboard({ products, setProducts, globalFreig
 
     const addProduct = () => {
         const newId = Math.max(...products.map(p => p.id), 0) + 1;
-        setProducts([...products, { id: newId, name: '', qty: 0, vendorCost: 0, customerPrice: 0, interestRate: 12, freight: 0, vendorDays: 0, customerDays: 0 }]);
+        setProducts([...products, { id: newId, name: '', qty: 0, vendorCost: 0, rawMaterial: 0, conversion: 0, bagWeight: 0, interestRate: 12, freight: 0, vendorDays: 0, customerDays: 0 }]);
     };
 
     const deleteProduct = (id) => {
@@ -118,7 +124,48 @@ export default function QuantitiesDashboard({ products, setProducts, globalFreig
             <div className="flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[400px]">
                 {/* Table Toolbar */}
                 <div className="flex flex-wrap items-center justify-between gap-4 p-4 border-b border-slate-200 bg-slate-50/50">
-                    <h3 className="text-lg font-bold text-slate-900">Product Profitability Table</h3>
+                    <div className="flex items-center gap-6">
+                        <h3 className="text-lg font-bold text-slate-900">Product Profitability Table</h3>
+                        <div className="hidden md:block w-px h-6 bg-slate-300"></div>
+                        <div className="flex items-center gap-4 bg-white px-4 py-1.5 border border-slate-200 shadow-sm rounded-xl">
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-slate-500 uppercase whitespace-nowrap">GST Slab %</span>
+                                <input
+                                    type="number"
+                                    className="w-16 bg-slate-50 border border-slate-200 rounded px-2 py-1 text-sm font-bold text-slate-800 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                                    value={config?.gstSlab ?? 18}
+                                    onChange={e => setConfig && setConfig({ ...config, gstSlab: parseFloat(e.target.value) || 0 })}
+                                />
+                            </div>
+                            <div className="w-px h-6 bg-slate-200"></div>
+                            <label className="flex items-center gap-3 cursor-pointer group">
+                                <span className={`text-[11px] font-bold uppercase tracking-widest transition-colors ${!(config?.isFIBCMode) ? 'text-slate-700' : 'text-slate-400'}`}>Standard</span>
+                                <div 
+                                    className={`relative inline-flex flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${config?.isFIBCMode ? 'bg-amber-500' : 'bg-slate-200'}`}
+                                    style={{ width: '40px', height: '20px' }}
+                                    role="switch"
+                                    aria-checked={config?.isFIBCMode || false}
+                                >
+                                    <span
+                                        aria-hidden="true"
+                                        className={`pointer-events-none inline-block rounded-full bg-white shadow ring-0 transition-transform duration-200 ease-in-out`}
+                                        style={{ 
+                                            width: '16px', 
+                                            height: '16px',
+                                            transform: config?.isFIBCMode ? 'translateX(20px)' : 'translateX(0px)'
+                                        }}
+                                    />
+                                </div>
+                                <input
+                                    type="checkbox"
+                                    checked={config?.isFIBCMode || false}
+                                    onChange={(e) => setConfig && setConfig({ ...config, isFIBCMode: e.target.checked })}
+                                    className="hidden"
+                                />
+                                <span className={`text-[11px] font-bold uppercase tracking-widest transition-colors ${config?.isFIBCMode ? 'text-amber-600' : 'text-slate-400'}`}>FIBC Mode</span>
+                            </label>
+                        </div>
+                    </div>
                     <div className="flex gap-2">
                         <button onClick={addProduct} className="flex items-center h-9 px-4 rounded-lg bg-primary text-white text-sm font-bold hover:bg-blue-700 transition-all shadow-sm">
                             <span className="material-symbols-outlined text-[18px] mr-2">add</span>
@@ -141,7 +188,16 @@ export default function QuantitiesDashboard({ products, setProducts, globalFreig
                                 <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest min-w-[120px] text-right border-r border-slate-100">Qty</th>
 
                                 {/* Buying Inputs */}
-                                <th className="px-5 py-4 text-[10px] font-black text-blue-400 uppercase tracking-widest min-w-[140px] bg-blue-50/30 align-top">Base Price</th>
+                                {config?.isFIBCMode ? (
+                                    <>
+                                        <th className="px-5 py-4 text-[10px] font-black text-amber-500 uppercase tracking-widest min-w-[120px] bg-amber-50/30 align-top">RM / kg</th>
+                                        <th className="px-5 py-4 text-[10px] font-black text-amber-500 uppercase tracking-widest min-w-[120px] bg-amber-50/30 align-top">Conv. / kg</th>
+                                        <th className="px-5 py-4 text-[10px] font-black text-amber-500 uppercase tracking-widest min-w-[120px] bg-amber-50/30 align-top">Bag Wt (kg)</th>
+                                        <th className="px-5 py-4 text-[10px] font-black text-blue-400 uppercase tracking-widest min-w-[140px] bg-blue-50/50 align-top">Base Cost</th>
+                                    </>
+                                ) : (
+                                    <th className="px-5 py-4 text-[10px] font-black text-blue-400 uppercase tracking-widest min-w-[140px] bg-blue-50/30 align-top">Base Cost</th>
+                                )}
                                 <th className="px-5 py-4 text-[10px] font-black text-blue-400 uppercase tracking-widest min-w-[100px] bg-blue-50/30 text-right align-top">Int. Rate %</th>
                                 <th className="px-5 py-3 text-[10px] font-black text-blue-400 uppercase tracking-widest min-w-[120px] bg-blue-50/30 align-top">
                                     <div className="flex flex-col gap-1.5 w-full">
@@ -222,19 +278,73 @@ export default function QuantitiesDashboard({ products, setProducts, globalFreig
                                         </td>
 
                                         {/* Base Price */}
-                                        <td className="px-5 py-4 align-top bg-blue-50/10">
-                                            <div className="relative rounded-md shadow-sm">
-                                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                                    <span className="text-slate-400 sm:text-sm">₹</span>
+                                        {config?.isFIBCMode ? (
+                                            <>
+                                                <td className="px-5 py-4 align-top bg-amber-50/10 border-r border-amber-100">
+                                                    <div className="relative rounded-md shadow-sm">
+                                                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                                            <span className="text-amber-400 sm:text-sm font-bold">₹</span>
+                                                        </div>
+                                                        <input
+                                                            type="number"
+                                                            className="block w-full rounded-md border-0 py-1.5 pl-7 pr-2 text-slate-900 ring-1 ring-inset ring-amber-200 focus:ring-2 focus:ring-inset focus:ring-amber-500 sm:text-sm sm:leading-6 font-mono font-medium placeholder:text-slate-300"
+                                                            value={p.rawMaterial || ''}
+                                                            onChange={(e) => updateProduct(p.id, 'rawMaterial', e.target.value)}
+                                                            placeholder="0"
+                                                        />
+                                                    </div>
+                                                </td>
+                                                <td className="px-5 py-4 align-top bg-amber-50/10 border-r border-amber-100">
+                                                    <div className="relative rounded-md shadow-sm">
+                                                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                                            <span className="text-amber-400 sm:text-sm font-bold">₹</span>
+                                                        </div>
+                                                        <input
+                                                            type="number"
+                                                            className="block w-full rounded-md border-0 py-1.5 pl-7 pr-2 text-slate-900 ring-1 ring-inset ring-amber-200 focus:ring-2 focus:ring-inset focus:ring-amber-500 sm:text-sm sm:leading-6 font-mono font-medium placeholder:text-slate-300"
+                                                            value={p.conversion || ''}
+                                                            onChange={(e) => updateProduct(p.id, 'conversion', e.target.value)}
+                                                            placeholder="0"
+                                                        />
+                                                    </div>
+                                                </td>
+                                                <td className="px-5 py-4 align-top bg-amber-50/10 border-r border-amber-100">
+                                                    <div className="relative rounded-md shadow-sm">
+                                                        <input
+                                                            type="number"
+                                                            className="block w-full rounded-md border-0 py-1.5 px-2 text-slate-900 ring-1 ring-inset ring-amber-200 focus:ring-2 focus:ring-inset focus:ring-amber-500 sm:text-sm sm:leading-6 font-mono font-medium placeholder:text-slate-300"
+                                                            value={p.bagWeight || ''}
+                                                            onChange={(e) => updateProduct(p.id, 'bagWeight', e.target.value)}
+                                                            placeholder="0.00"
+                                                        />
+                                                    </div>
+                                                </td>
+                                                <td className="px-5 py-4 align-top bg-blue-50/20">
+                                                    <div className="relative rounded-md shadow-sm">
+                                                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                                            <span className="text-slate-400 sm:text-sm font-bold">₹</span>
+                                                        </div>
+                                                        <div className="block w-full rounded-md border border-blue-200 bg-white py-1.5 pl-7 pr-2 text-blue-700 sm:text-sm sm:leading-6 font-mono font-bold cursor-not-allowed">
+                                                            {(((Number(p.rawMaterial) || 0) + (Number(p.conversion) || 0)) * (Number(p.bagWeight) || 0)).toFixed(2)}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </>
+                                        ) : (
+                                            <td className="px-5 py-4 align-top bg-blue-50/10">
+                                                <div className="relative rounded-md shadow-sm">
+                                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                                        <span className="text-slate-400 sm:text-sm">₹</span>
+                                                    </div>
+                                                    <input
+                                                        type="number"
+                                                        className="block w-full rounded-md border-0 py-1.5 pl-7 pr-2 text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-300 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 font-mono font-medium"
+                                                        value={p.vendorCost}
+                                                        onChange={(e) => updateProduct(p.id, 'vendorCost', e.target.value)}
+                                                    />
                                                 </div>
-                                                <input
-                                                    type="number"
-                                                    className="block w-full rounded-md border-0 py-1.5 pl-7 pr-2 text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-300 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 font-mono font-medium"
-                                                    value={p.vendorCost}
-                                                    onChange={(e) => updateProduct(p.id, 'vendorCost', e.target.value)}
-                                                />
-                                            </div>
-                                        </td>
+                                            </td>
+                                        )}
 
                                         {/* Interest Rate */}
                                         <td className="px-5 py-4 align-top bg-blue-50/10">

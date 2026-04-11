@@ -3,7 +3,7 @@ import BuyingTab from './BuyingTab';
 import MarginSimulator from './MarginSimulator';
 import { Calculator, Table } from 'lucide-react';
 
-export default function CostAnalysis({ vendors, setVendors }) {
+export default function CostAnalysis({ vendors, setVendors, config, setConfig }) {
     const [activeSubTab, setActiveSubTab] = useState('matrix');
 
     return (
@@ -38,6 +38,8 @@ export default function CostAnalysis({ vendors, setVendors }) {
                     <BuyingTab
                         vendors={vendors || []}
                         setVendors={setVendors}
+                        config={config}
+                        setConfig={setConfig}
                     />
                 ) : (
                     <MarginSimulator />

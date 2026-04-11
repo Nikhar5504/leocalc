@@ -6,15 +6,27 @@ import {
 } from 'lucide-react';
 
 // Refined Cost Analysis Matrix with "Colourful" Visuals
-export default function BuyingTab({ vendors, setVendors }) {
+export default function BuyingTab({ vendors, setVendors, config, setConfig }) {
     const ANNUAL_INTEREST_RATE = 0.12;
+    const isFIBCMode = config?.isFIBCMode || false;
+    const gstSlab = config?.gstSlab ?? 18;
 
     // --- Calculations ---
     const buyingData = useMemo(() => {
         if (!vendors.length) return [];
 
         const calculated = vendors.map(vendor => {
-            const base = parseFloat(vendor.basePrice) || 0;
+            let base = 0;
+            const rawMaterial = parseFloat(vendor.rawMaterial) || 0;
+            const conversion = parseFloat(vendor.conversion) || 0;
+            const bagWeight = parseFloat(vendor.bagWeight) || 0;
+
+            if (isFIBCMode) {
+                base = (rawMaterial + conversion) * bagWeight;
+            } else {
+                base = parseFloat(vendor.basePrice) || 0;
+            }
+
             const freight = parseFloat(vendor.freight) || 0;
             const days = parseFloat(vendor.creditDays) || 0; // Vendor Days
             const qty = parseFloat(vendor.quantity) || 0;
@@ -39,8 +51,9 @@ export default function BuyingTab({ vendors, setVendors }) {
             const grossMargin = revenue - cogs;
 
             // Bank Loan Interest Cost (Financing the Cash Gap)
-            // Bank interest applies only if we need a loan (Gap > 0).
-            const financingCost = cashGapDays > 0 ? (tco * cashGapDays * (interestRate / 100)) / 365 : 0;
+            // Bank interest applies to (Landed Cost + GST Slab)
+            const tcoWithGst = tco * (1 + gstSlab / 100);
+            const financingCost = cashGapDays > 0 ? (tcoWithGst * cashGapDays * (interestRate / 100)) / 365 : 0;
             const totalFinancingCost = financingCost * qty;
 
             // Realized Margin (Net Profit after Bank Loan Cost)
@@ -53,6 +66,8 @@ export default function BuyingTab({ vendors, setVendors }) {
                 tco,
                 tcoTotal,
                 interestRate,
+                rawMaterial, // For metrics
+                conversion, // For metrics
                 sellingPrice,
                 customerDays,
                 cashGapDays,
@@ -79,25 +94,29 @@ export default function BuyingTab({ vendors, setVendors }) {
                 isTopProfit
             };
         });
-    }, [vendors]);
+    }, [vendors, isFIBCMode, gstSlab]);
 
     // --- Summary Metrics ---
     const metrics = useMemo(() => {
         if (!buyingData.length) return {
             topProfitDeal: { name: '-', profit: 0 },
             lowestLandedCost: { name: '-', cost: 0 },
+            bestConversionDeal: null,
             totalNetProfit: 0,
             avgCashCycle: 0
         };
 
         const topProfit = buyingData.reduce((prev, current) => (prev.netProfit > current.netProfit) ? prev : current, buyingData[0]);
         const lowestCost = buyingData.reduce((prev, current) => (prev.tco < current.tco) ? prev : current, buyingData[0]);
+        const bestConversion = buyingData.filter(v => v.conversion > 0).reduce((prev, current) => (!prev || current.conversion < prev.conversion) ? current : prev, null);
+
         const totalNetProfit = buyingData.reduce((sum, v) => sum + v.netProfit, 0);
         const avgCashCycle = buyingData.reduce((sum, v) => sum + v.cashGapDays, 0) / buyingData.length;
 
         return {
             topProfitDeal: { name: topProfit.name || 'N/A', profit: topProfit.netProfit },
             lowestLandedCost: { name: lowestCost.name || 'N/A', cost: lowestCost.tco },
+            bestConversionDeal: bestConversion ? { name: bestConversion.name || 'N/A', cost: bestConversion.conversion } : null,
             totalNetProfit,
             avgCashCycle
         };
@@ -120,6 +139,9 @@ export default function BuyingTab({ vendors, setVendors }) {
                 productName: 'Product A',
                 quantity: 1000,
                 basePrice: 100,
+                rawMaterial: 90,
+                conversion: 15,
+                bagWeight: 2.5,
                 interestRate: 12,
                 freight: 10,
                 creditDays: 30, // Vendor
@@ -132,17 +154,52 @@ export default function BuyingTab({ vendors, setVendors }) {
     return (
         <div className="flex-1 overflow-auto p-4 md:p-8 flex flex-col gap-8 bg-slate-50 font-sans">
             {/* Header / Intro */}
-            <div className="flex justify-between items-end">
+            <div className="flex flex-col md:flex-row justify-between md:items-end gap-6">
                 <div>
-                    <div className="flex items-center gap-2 mb-1">
-                        {/* Removed Procurement Module Badge */}
-                    </div>
                     <h1 className="text-2xl font-black text-slate-900 tracking-tight">Cost Analysis Matrix</h1>
+                </div>
+                <div className="flex items-center gap-4 bg-white px-4 py-2 border border-slate-200 shadow-sm rounded-xl">
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-500 uppercase whitespace-nowrap">GST Slab %</span>
+                        <input
+                            type="number"
+                            className="w-16 bg-slate-50 border border-slate-200 rounded px-2 py-1 text-sm font-bold text-slate-800 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                            value={gstSlab}
+                            onChange={e => setConfig && setConfig({ ...config, gstSlab: parseFloat(e.target.value) || 0 })}
+                        />
+                    </div>
+                    <div className="w-px h-6 bg-slate-200"></div>
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                        <span className={`text-[11px] font-bold uppercase tracking-widest transition-colors ${!isFIBCMode ? 'text-slate-700' : 'text-slate-400'}`}>Standard</span>
+                        <div 
+                            className={`relative inline-flex flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${isFIBCMode ? 'bg-amber-500' : 'bg-slate-200'}`}
+                            style={{ width: '40px', height: '20px' }}
+                            role="switch"
+                            aria-checked={isFIBCMode}
+                        >
+                            <span
+                                aria-hidden="true"
+                                className={`pointer-events-none inline-block rounded-full bg-white shadow ring-0 transition-transform duration-200 ease-in-out`}
+                                style={{ 
+                                    width: '16px', 
+                                    height: '16px',
+                                    transform: isFIBCMode ? 'translateX(20px)' : 'translateX(0px)'
+                                }}
+                            />
+                        </div>
+                        <input
+                            type="checkbox"
+                            checked={isFIBCMode}
+                            onChange={(e) => setConfig && setConfig({ ...config, isFIBCMode: e.target.checked })}
+                            className="hidden"
+                        />
+                        <span className={`text-[11px] font-bold uppercase tracking-widest transition-colors ${isFIBCMode ? 'text-amber-600' : 'text-slate-400'}`}>FIBC Mode</span>
+                    </label>
                 </div>
             </div>
 
             {/* Metrics Grid - Comparative Focus */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className={`grid grid-cols-1 md:grid-cols-${(isFIBCMode && metrics.bestConversionDeal) ? '3' : '2'} gap-6`}>
                 {/* 1. Top Profit Deal - White Card with Emerald Accent (Fixed Visibility) */}
                 <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm relative overflow-hidden active-ring">
                     <div className="flex justify-between items-start mb-1">
@@ -187,6 +244,29 @@ export default function BuyingTab({ vendors, setVendors }) {
                         </p>
                     </div>
                 </div>
+
+                {/* 3. Best Conversion Deal (FIBC Only) */}
+                {isFIBCMode && metrics.bestConversionDeal && (
+                    <div className="bg-white p-5 rounded-2xl border border-amber-200 shadow-sm relative overflow-hidden active-ring">
+                        <div className="flex justify-between items-start mb-1">
+                            <p className="text-[11px] font-bold text-amber-500 uppercase tracking-widest">Lowest Conversion Cost</p>
+                            <div className="bg-amber-50 rounded-full p-1 text-amber-600">
+                                <TrendingDown size={14} />
+                            </div>
+                        </div>
+                        <div className="flex flex-col items-start mt-2">
+                            <p className="text-4xl font-black text-amber-600 tracking-tighter">
+                                <span className="text-2xl align-top text-amber-400 font-bold mr-0.5">₹</span>
+                                {metrics.bestConversionDeal.cost.toFixed(2)}
+                                <span className="text-sm text-amber-400 font-bold ml-1">/kg</span>
+                            </p>
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mt-1 truncate max-w-full" title={metrics.bestConversionDeal.name}>
+                                {metrics.bestConversionDeal.name}
+                            </p>
+                        </div>
+                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-amber-300"></div>
+                    </div>
+                )}
             </div>
 
             {/* Matrix Table */}
@@ -215,7 +295,16 @@ export default function BuyingTab({ vendors, setVendors }) {
                                 <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest min-w-[120px] text-right">Qty</th>
 
                                 {/* Buying Inputs */}
-                                <th className="px-5 py-4 text-[10px] font-black text-blue-400 uppercase tracking-widest min-w-[140px] bg-blue-50/30">Base Price</th>
+                                {isFIBCMode ? (
+                                    <>
+                                        <th className="px-5 py-4 text-[10px] font-black text-blue-400 uppercase tracking-widest min-w-[120px] bg-blue-50/30">RM/kg</th>
+                                        <th className="px-5 py-4 text-[10px] font-black text-amber-500 uppercase tracking-widest min-w-[120px] bg-amber-50/20">Conv/kg</th>
+                                        <th className="px-5 py-4 text-[10px] font-black text-blue-400 uppercase tracking-widest min-w-[100px] bg-blue-50/30">Bag Wt (kg)</th>
+                                        <th className="px-5 py-4 text-[10px] font-black text-blue-500 uppercase tracking-widest min-w-[100px] bg-blue-100/50">Base Price</th>
+                                    </>
+                                ) : (
+                                    <th className="px-5 py-4 text-[10px] font-black text-blue-400 uppercase tracking-widest min-w-[140px] bg-blue-50/30">Base Price</th>
+                                )}
                                 <th className="px-5 py-4 text-[10px] font-black text-blue-400 uppercase tracking-widest min-w-[100px] bg-blue-50/30 text-right">Int. Rate %</th>
                                 <th className="px-5 py-4 text-[10px] font-black text-blue-400 uppercase tracking-widest min-w-[120px] bg-blue-50/30">Freight</th>
                                 <th className="px-5 py-4 text-[10px] font-black text-blue-400 uppercase tracking-widest min-w-[130px] bg-blue-50/50 border-r border-blue-100">Vendor Terms</th>
@@ -308,20 +397,67 @@ export default function BuyingTab({ vendors, setVendors }) {
                                         </div>
                                     </td>
 
-                                    {/* Base Price */}
-                                    <td className="px-5 py-4 align-top bg-blue-50/10">
-                                        <div className="relative rounded-md shadow-sm">
-                                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                                <span className="text-slate-400 sm:text-sm">₹</span>
+                                    {/* Buying Inputs */}
+                                    {isFIBCMode ? (
+                                        <>
+                                            <td className="px-5 py-4 align-top bg-blue-50/10">
+                                                <div className="relative rounded-md shadow-sm opacity-90 hover:opacity-100 transition-opacity">
+                                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2">
+                                                        <span className="text-slate-400 sm:text-sm font-bold">₹</span>
+                                                    </div>
+                                                    <input
+                                                        type="number"
+                                                        className="block w-full rounded-md border-0 py-1.5 pl-6 pr-1 text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-300 focus:ring-2 focus:ring-inset focus:ring-blue-400 sm:text-[11px] font-mono font-medium bg-white"
+                                                        value={row.rawMaterial || ''}
+                                                        onChange={(e) => handleVendorChange(row.id, 'rawMaterial', e.target.value)}
+                                                        placeholder="0.00"
+                                                    />
+                                                </div>
+                                            </td>
+                                            <td className="px-5 py-4 align-top bg-amber-50/10">
+                                                <div className="relative rounded-md shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)]">
+                                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2">
+                                                        <span className="text-amber-400 sm:text-sm font-bold">₹</span>
+                                                    </div>
+                                                    <input
+                                                        type="number"
+                                                        className="block w-full rounded-md border-0 py-1.5 pl-6 pr-1 text-slate-900 ring-1 ring-inset ring-amber-200 placeholder:text-amber-200 focus:ring-2 focus:ring-inset focus:ring-amber-400 sm:text-[11px] font-mono font-bold bg-white"
+                                                        value={row.conversion || ''}
+                                                        onChange={(e) => handleVendorChange(row.id, 'conversion', e.target.value)}
+                                                        placeholder="0.00"
+                                                    />
+                                                </div>
+                                            </td>
+                                            <td className="px-5 py-4 align-top bg-blue-50/10">
+                                                <input
+                                                    type="number"
+                                                    className="block w-full rounded-md border-0 py-1.5 px-2 text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-300 focus:ring-2 focus:ring-inset focus:ring-blue-400 sm:text-[11px] font-mono font-medium text-center bg-white"
+                                                    value={row.bagWeight || ''}
+                                                    onChange={(e) => handleVendorChange(row.id, 'bagWeight', e.target.value)}
+                                                    placeholder="0.0"
+                                                />
+                                            </td>
+                                            <td className="px-5 py-4 align-top bg-blue-100/30">
+                                                <div className="flex items-center h-full pt-1.5">
+                                                    <span className="text-sm font-black text-blue-700 font-mono tracking-tight">₹{row.base.toFixed(2)}</span>
+                                                </div>
+                                            </td>
+                                        </>
+                                    ) : (
+                                        <td className="px-5 py-4 align-top bg-blue-50/10">
+                                            <div className="relative rounded-md shadow-sm">
+                                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                                    <span className="text-slate-400 sm:text-sm">₹</span>
+                                                </div>
+                                                <input
+                                                    type="number"
+                                                    className="block w-full rounded-md border-0 py-1.5 pl-7 pr-2 text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-300 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 font-mono font-medium bg-white"
+                                                    value={row.basePrice}
+                                                    onChange={(e) => handleVendorChange(row.id, 'basePrice', e.target.value)}
+                                                />
                                             </div>
-                                            <input
-                                                type="number"
-                                                className="block w-full rounded-md border-0 py-1.5 pl-7 pr-2 text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-300 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 font-mono font-medium"
-                                                value={row.basePrice}
-                                                onChange={(e) => handleVendorChange(row.id, 'basePrice', e.target.value)}
-                                            />
-                                        </div>
-                                    </td>
+                                        </td>
+                                    )}
 
                                     {/* Interest Rate */}
                                     <td className="px-5 py-4 align-top bg-blue-50/10">
