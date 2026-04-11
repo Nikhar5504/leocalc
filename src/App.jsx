@@ -185,7 +185,7 @@ function App() {
       payload = { products, globalFreight, config: quantitiesConfig };
     } else if (activeTab === 'cost_analysis') {
       type = 'cost_analysis';
-      payload = { vendors: costAnalysisData };
+      payload = { vendors: costAnalysisData, config: costMatrixConfig };
     }
 
     // Fetch existing companies
@@ -228,7 +228,7 @@ function App() {
       payload = { products, globalFreight, config: quantitiesConfig };
     } else if (activeTab === 'cost_analysis') {
       type = 'cost_analysis';
-      payload = { vendors: costAnalysisData };
+      payload = { vendors: costAnalysisData, config: costMatrixConfig };
     }
 
     const finalPayload = { ...payload, companyName: editingCompanyName, recordName: editingRecordName };
@@ -330,12 +330,12 @@ function App() {
     } else if (archive.type === 'quantities') {
       if (archive.data.products) setProducts(archive.data.products);
       if (archive.data.globalFreight !== undefined) setGlobalFreight(archive.data.globalFreight);
-      if (archive.data.config) setQuantitiesConfig(archive.data.config);
+      setQuantitiesConfig(archive.data.config || { isFIBCMode: false, gstSlab: 18 });
       setActiveTab('quantities');
     } else if (archive.type === 'cost_analysis' || archive.type === 'vendor_comparison') {
       // Backward compatibility for 'vendor_comparison'
       if (archive.data.vendors) setCostAnalysisData(archive.data.vendors);
-      if (archive.data.config) setCostMatrixConfig(archive.data.config);
+      setCostMatrixConfig(archive.data.config || { isFIBCMode: false, gstSlab: 18 });
       setActiveTab('cost_analysis');
     }
 
