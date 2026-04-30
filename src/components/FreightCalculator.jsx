@@ -12,56 +12,61 @@ const convertValue = (val, fromUnit, toUnit) => {
     return parseFloat((valInMeters / toMeters[toUnit]).toFixed(4));
 };
 
+const dimensionFields = ['vehicleL', 'vehicleW', 'vehicleH', 'baleL', 'baleW', 'baleH'];
+
+const readDimension = (raw, fallbackUnit) => {
+    if (raw && typeof raw === 'object') {
+        return {
+            value: raw.value ?? '',
+            unit: raw.unit || fallbackUnit
+        };
+    }
+
+    return {
+        value: raw ?? '',
+        unit: fallbackUnit
+    };
+};
+
 export default function FreightCalculator({ inputs, onChange, bagWeight }) {
     const { unit, vehicleL, vehicleW, vehicleH, baleL, baleW, baleH, efficiency, palletCapacity, freightCharge, customCount, effectivePalletCount } = inputs;
 
     // Local Unit State for each dimension
-    const [dimUnits, setDimUnits] = React.useState({
-        vehicleL: unit, vehicleW: unit, vehicleH: unit,
-        baleL: unit, baleW: unit, baleH: unit
+    const [dimUnits, setDimUnits] = React.useState(() => {
+        return dimensionFields.reduce((acc, name) => {
+            acc[name] = readDimension(inputs[name], unit).unit;
+            return acc;
+        }, {});
     });
-
-    // Update local units when master unit changes (optional, but good UX to default to master)
-    // Actually, user implies they want to be able to set them differently.
-    // Let's only sync if they haven't been touched? Or just init with unit. 
-    // Let's use an effect to sync them IF they match the OLD unit?
-    // Simpler: Just init. If master changes, we don't force change local unless we want to reset.
-    // Let's keep them persistent per field.
-
-    // Helper helper
-    const getDisplayValue = (val, localUnit) => {
-        if (!val) return '';
-        // inputs[name] is in Master Unit 'unit'.
-        // We want to display in 'localUnit'.
-        return convertValue(val, unit, localUnit);
-    };
 
     const handleLocalValueChange = (e, name, localUnit) => {
         const val = e.target.value;
-        // Val is in localUnit. Convert to Master Unit 'unit' for storage.
-        const newValInMaster = convertValue(val, localUnit, unit);
-        onChange({ target: { name: name, value: newValInMaster } });
+        onChange({ target: { name, value: { value: val, unit: localUnit } } });
     };
 
     const handleLocalUnitChange = (name, newUnit) => {
         setDimUnits(prev => ({ ...prev, [name]: newUnit }));
+        const current = readDimension(inputs[name], unit);
+        onChange({ target: { name, value: { value: current.value, unit: newUnit } } });
     };
-    const toCm = (val) => {
-        const v = parseFloat(val) || 0;
-        if (unit === 'm') return v * 100;
-        if (unit === 'ft') return v * 30.48;
-        if (unit === 'in') return v * 2.54;
-        if (unit === 'mm') return v * 0.1;
-        return v;
+
+    const toMasterUnit = (name) => {
+        const dim = readDimension(inputs[name], dimUnits[name] || unit);
+        return convertValue(dim.value, dim.unit, unit);
+    };
+
+    const toCm = (name) => {
+        const dim = readDimension(inputs[name], dimUnits[name] || unit);
+        return convertValue(dim.value, dim.unit, 'cm');
     };
 
     // Math
-    const vL_cm = toCm(vehicleL);
-    const vW_cm = toCm(vehicleW);
-    const vH_cm = toCm(vehicleH);
-    const bL_cm = toCm(baleL);
-    const bW_cm = toCm(baleW);
-    const bH_cm = toCm(baleH);
+    const vL_cm = toCm('vehicleL');
+    const vW_cm = toCm('vehicleW');
+    const vH_cm = toCm('vehicleH');
+    const bL_cm = toCm('baleL');
+    const bW_cm = toCm('baleW');
+    const bH_cm = toCm('baleH');
 
     const balesInLength = bL_cm > 0 ? Math.floor(vL_cm / bL_cm) : 0;
     const balesInWidth = bW_cm > 0 ? Math.floor(vW_cm / bW_cm) : 0;
@@ -87,9 +92,10 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
     const freightPerPiece = totalPieces > 0 ? fCharge / totalPieces : 0;
 
     const renderDimInput = (label, name) => {
-        const localUnit = dimUnits[name] || unit;
-        const displayVal = getDisplayValue(inputs[name], localUnit);
-        const masterVal = parseFloat(inputs[name] || 0);
+        const storedDim = readDimension(inputs[name], dimUnits[name] || unit);
+        const localUnit = storedDim.unit;
+        const displayVal = storedDim.value;
+        const masterVal = toMasterUnit(name);
         const isDifferent = localUnit !== unit;
 
         return (
@@ -113,27 +119,33 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
                             <option value="ft">FT</option>
                             <option value="in">IN</option>
                             <option value="cm">CM</option>
+                            <option value="mm">MM</option>
                         </select>
                     </div>
                 </div>
                 {isDifferent && (
                     <p className="text-[10px] text-primary mt-1 text-right font-medium">
-                        = {masterVal} {unit.toUpperCase()} (Converted)
+                        Internally {masterVal} {unit.toUpperCase()}
                     </p>
                 )}
             </div>
         );
     };
 
+    const displayDim = (name) => {
+        const dim = readDimension(inputs[name], dimUnits[name] || unit);
+        return `${dim.value || 0} ${dim.unit}`;
+    };
+
     return (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 h-full min-h-[420px]">
 
             {/* Left Col: Config (Span 1) */}
-            <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col gap-5 shadow-sm h-full overflow-y-auto">
+            <div className="panel-surface rounded-2xl p-6 flex flex-col gap-5 h-full overflow-y-auto">
                 <div className="flex items-center justify-between mb-1 pb-4 border-b border-slate-200">
                     <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-primary">local_shipping</span>
-                        <h4 className="text-text-main font-semibold">Freight Configuration</h4>
+                        <h4 className="text-text-main font-black">Freight Configuration</h4>
                     </div>
                 </div>
 
@@ -150,6 +162,7 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
                             <option value="ft">Feet (FT)</option>
                             <option value="in">Inches (IN)</option>
                             <option value="cm">CM</option>
+                            <option value="mm">MM</option>
                         </select>
                     </div>
                 </div>
@@ -214,16 +227,16 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
             </div>
 
             {/* Right Col: Visualizer (Span 2) */}
-            <div className="xl:col-span-2 bg-white border border-slate-200 rounded-xl p-1 flex flex-col relative overflow-hidden shadow-sm h-full min-h-[400px]">
+            <div className="panel-surface xl:col-span-2 rounded-2xl p-1 flex flex-col relative overflow-hidden h-full min-h-[400px]">
 
                 <div className="absolute top-4 right-4 z-10 flex gap-2">
-                    <button className="bg-primary hover:bg-primary/90 text-white rounded-lg p-2 transition-colors shadow-md flex items-center justify-center">
+                    <button className="pressable bg-primary hover:bg-primary/90 text-white rounded-xl p-2 transition-colors shadow-md flex items-center justify-center">
                         <span className="material-symbols-outlined text-[20px]">3d_rotation</span>
                     </button>
                 </div>
 
                 {/* 3D Canvas Area */}
-                <div className="flex-1 bg-slate-50 rounded-lg relative overflow-hidden bale-pattern flex items-center justify-center border border-slate-100 m-1">
+                <div className="flex-1 bg-slate-50 rounded-xl relative overflow-hidden bale-pattern flex items-center justify-center border border-slate-100 m-1">
                     <div style={{ width: '100%', height: '100%' }}>
                         <BaleVisualizer
                             vehicleDims={{ l: vL_cm, w: vW_cm, h: vH_cm }}
@@ -238,12 +251,12 @@ export default function FreightCalculator({ inputs, onChange, bagWeight }) {
                     </div>
                     {/* Debug Stats Overlay in Canvas */}
                     <div className="absolute bottom-4 left-4 font-mono text-xs text-slate-400 bg-white/80 px-2 py-1 rounded border border-slate-200 pointer-events-none">
-                        {inputs.vehicleL} x {inputs.vehicleW} x {inputs.vehicleH} {unit}
+                        {displayDim('vehicleL')} x {displayDim('vehicleW')} x {displayDim('vehicleH')}
                     </div>
                 </div>
 
                 {/* Footer Stats - REPLACEMENT as requested */}
-                <div className="h-20 bg-white border-t border-slate-200 flex flex-col justify-center px-6 rounded-b-lg">
+                <div className="min-h-20 bg-white/80 border-t border-slate-200 flex flex-col justify-center px-6 py-4 rounded-b-2xl">
                     <div className="flex flex-wrap gap-x-8 gap-y-2 justify-between items-center w-full">
 
                         {/* Total Pallets (Physical) */}

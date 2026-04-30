@@ -58,18 +58,19 @@ export default function Login({ onLoginSuccess }) {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-display">
+        <div className="min-h-screen app-shell flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-display">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-slate-900">
+                <div className="mx-auto brand-mark mb-5">L</div>
+                <h2 className="mt-6 text-center text-4xl font-black tracking-tight text-slate-950">
                     Sign in to Leocalc
                 </h2>
-                <p className="mt-2 text-center text-sm text-slate-600">
+                <p className="mt-2 text-center text-sm text-slate-500 font-medium">
                     Authorized personnel only
                 </p>
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-slate-200">
+                <div className="panel-surface py-8 px-4 rounded-3xl sm:px-10">
                     <form className="space-y-6" onSubmit={handleLogin}>
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-slate-700">
@@ -84,7 +85,7 @@ export default function Login({ onLoginSuccess }) {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="block w-full rounded-md border-slate-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                                    className="input-surface block w-full rounded-2xl focus:border-primary focus:ring-primary sm:text-sm px-4 py-3 border font-semibold"
                                     placeholder="Enter your email"
                                 />
                             </div>
@@ -100,7 +101,7 @@ export default function Login({ onLoginSuccess }) {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="flex w-full justify-center rounded-md border border-transparent bg-primary py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                className="pressable flex w-full justify-center rounded-full border border-transparent bg-primary py-3 px-4 text-sm font-black text-white shadow-lg shadow-primary/20 hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                             >
                                 {loading ? 'Sending Link...' : 'Send Login Link'}
                             </button>

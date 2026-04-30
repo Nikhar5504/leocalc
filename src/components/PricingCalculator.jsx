@@ -27,10 +27,10 @@ export default function PricingCalculator({ inputs, onChange }) {
     return (
         <>
             {/* Left Column: Inputs */}
-            <div className="xl:col-span-4 flex flex-col gap-6 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+            <div className="xl:col-span-4 flex flex-col gap-6 panel-surface rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex flex-col gap-0.5">
-                        <h3 className="text-slate-900 text-lg font-black tracking-tight">Unit Economics</h3>
+                        <h3 className="text-slate-900 text-xl font-black tracking-tight">Unit Economics</h3>
                         <p className="text-slate-500 text-xs font-medium uppercase tracking-widest">Base Cost Inputs</p>
                     </div>
                 </div>
@@ -41,13 +41,13 @@ export default function PricingCalculator({ inputs, onChange }) {
                             <span className="text-slate-400 text-[10px] font-black uppercase tracking-[0.15em]">PP Rate (₹/kg)</span>
                             <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold font-mono">₹</span>
-                                <input className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-8 pr-3 text-slate-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono text-sm font-bold" type="number" name="ppRate" value={inputs.ppRate} onChange={onChange} />
+                                <input className="input-surface w-full rounded-xl py-3 pl-8 pr-3 text-slate-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono text-sm font-bold" type="number" name="ppRate" value={inputs.ppRate} onChange={onChange} />
                             </div>
                         </label>
                         <label className="flex flex-col gap-2">
                             <span className="text-slate-400 text-[10px] font-black uppercase tracking-[0.15em]">Bag Weight (kg)</span>
                             <div className="relative">
-                                <input className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-slate-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono text-sm font-bold" type="number" name="bagWeight" value={inputs.bagWeight} onChange={onChange} step="0.001" />
+                                <input className="input-surface w-full rounded-xl py-3 px-4 text-slate-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono text-sm font-bold" type="number" name="bagWeight" value={inputs.bagWeight} onChange={onChange} step="0.001" />
                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] font-black uppercase tracking-widest">kg</span>
                             </div>
                         </label>
@@ -58,14 +58,14 @@ export default function PricingCalculator({ inputs, onChange }) {
                             <span className="text-slate-400 text-[10px] font-black uppercase tracking-[0.15em]">Conv. Cost (₹/kg)</span>
                             <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold font-mono">₹</span>
-                                <input className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-8 pr-3 text-slate-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono text-sm font-bold" type="number" name="conversionCost" value={inputs.conversionCost} onChange={onChange} />
+                                <input className="input-surface w-full rounded-xl py-3 pl-8 pr-3 text-slate-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono text-sm font-bold" type="number" name="conversionCost" value={inputs.conversionCost} onChange={onChange} />
                             </div>
                         </label>
                         <label className="flex flex-col gap-2">
                             <span className="text-slate-400 text-[10px] font-black uppercase tracking-[0.15em]">Transport (₹/bag)</span>
                             <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold font-mono">₹</span>
-                                <input className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-8 pr-3 text-slate-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono text-sm font-bold" type="number" name="transportPerBag" value={inputs.transportPerBag} onChange={onChange} />
+                                <input className="input-surface w-full rounded-xl py-3 pl-8 pr-3 text-slate-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono text-sm font-bold" type="number" name="transportPerBag" value={inputs.transportPerBag} onChange={onChange} />
                             </div>
                         </label>
                     </div>
@@ -86,7 +86,7 @@ export default function PricingCalculator({ inputs, onChange }) {
                             <span className="text-primary font-black text-xs font-mono ml-1">%</span>
                         </div>
                     </div>
-                    <input className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-primary" type="range" name="profitMargin" min="0" max="500" value={inputs.profitMargin} onChange={onChange} />
+                    <input className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-primary" type="range" name="profitMargin" min="0" max="500" value={inputs.profitMargin} onChange={onChange} />
                 </div>
             </div>
 
@@ -94,7 +94,7 @@ export default function PricingCalculator({ inputs, onChange }) {
             <div className="xl:col-span-8 grid grid-cols-1 md:grid-cols-3 gap-6">
 
                 {/* Card 1: VENDOR COST (Blue) */}
-                <div className="bg-[#4f46e5] rounded-2xl p-6 relative overflow-hidden shadow-md flex flex-col justify-between text-white hover:shadow-lg transition-shadow">
+                <div className="metric-card metric-indigo rounded-2xl p-6 relative overflow-hidden flex flex-col justify-between text-white">
                     <div>
                         <p className="text-indigo-200 text-xs font-bold uppercase tracking-wider mb-1">Vendor Cost</p>
                         <p className="text-white/80 text-sm mb-1">Effective Vendor Cost</p>
@@ -107,7 +107,7 @@ export default function PricingCalculator({ inputs, onChange }) {
                 </div>
 
                 {/* Card 2: CUSTOMER PRICING (Green) */}
-                <div className="bg-[#059669] rounded-2xl p-6 relative overflow-hidden shadow-md flex flex-col justify-between text-white hover:shadow-lg transition-shadow">
+                <div className="metric-card metric-green rounded-2xl p-6 relative overflow-hidden flex flex-col justify-between text-white">
                     <div>
                         <p className="text-emerald-200 text-xs font-bold uppercase tracking-wider mb-1">Customer Pricing</p>
                         <p className="text-white/80 text-sm mb-1">Bag Price (Total)</p>
@@ -126,7 +126,7 @@ export default function PricingCalculator({ inputs, onChange }) {
                 </div>
 
                 {/* Card 3: PROFIT & COMPARISON (Purple) */}
-                <div className="bg-[#9333ea] rounded-2xl p-6 relative overflow-hidden shadow-md flex flex-col justify-between text-white hover:shadow-lg transition-shadow">
+                <div className="metric-card metric-ink rounded-2xl p-6 relative overflow-hidden flex flex-col justify-between text-white">
                     <div>
                         <p className="text-purple-200 text-xs font-bold uppercase tracking-wider mb-1">Profit & Comparison</p>
                         <p className="text-white/80 text-sm mb-1">Net Profit</p>

@@ -1,6 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
+const formatCurrency = (value, options = {}) => {
+    return Number(value || 0).toLocaleString('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+        ...options
+    });
+};
+
+const getCostingSummary = (archive) => {
+    const p = archive.data?.pricing || {};
+    const ppRate = Number(p.ppRate) || 0;
+    const transportPerBag = Number(p.transportPerBag) || 0;
+    const conversionCost = Number(p.conversionCost) || 0;
+    const bagWeight = Number(p.bagWeight) || 0;
+    const margin = Number(p.profitMargin) || 0;
+    const vendorPrice = (ppRate + transportPerBag + conversionCost) * bagWeight;
+    const customerPrice = margin >= 100 ? vendorPrice * 100 : vendorPrice / (1 - margin / 100);
+
+    return {
+        vendorPrice,
+        customerPrice,
+        margin
+    };
+};
+
+const CostingMetricStrip = ({ summary }) => (
+    <div className="costing-metric-row">
+        <div className="text-left">
+            <span className="costing-metric-value text-emerald-600">{formatCurrency(summary.vendorPrice)}</span>
+        </div>
+        <div className="text-center">
+            <span className="costing-metric-value text-orange-500">{summary.margin.toFixed(2)}%</span>
+        </div>
+        <div className="text-right">
+            <span className="costing-metric-value text-purple-600">{formatCurrency(summary.customerPrice)}</span>
+        </div>
+    </div>
+);
+
 export default function SavedArchives({ onLoad }) {
     const [activeFilter, setActiveFilter] = useState('All');
     const [archives, setArchives] = useState([]);
@@ -319,15 +360,12 @@ export default function SavedArchives({ onLoad }) {
                                         let subTitle = '';
                                         let mainMetricLabel = '';
                                         let mainMetricValue = '';
+                                        let costingSummary = null;
 
                                         if (isCalc) {
                                             title = a.data?.recordName || a.data?.companyName || `Costing #${a.id}`;
                                             subTitle = 'Costing Engine';
-                                            mainMetricLabel = 'Bag Price';
-                                            const p = a.data?.pricing || {};
-                                            const vendorCost = (Number(p.ppRate) + Number(p.transportPerBag) + Number(p.conversionCost)) * Number(p.bagWeight);
-                                            const price = vendorCost * (1 + (Number(p.profitMargin) / 100));
-                                            mainMetricValue = price.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+                                            costingSummary = getCostingSummary(a);
                                         } else if (isSched) {
                                             const po = a.data?.poDetails || {};
                                             title = a.data?.recordName || po.customerName || 'Unknown';
@@ -381,8 +419,8 @@ export default function SavedArchives({ onLoad }) {
                                         });
 
                                         return (
-                                            <div key={a.id} onClick={() => handleLoad(a)} className="group flex flex-col bg-white border border-slate-200 rounded-xl p-5 hover:shadow-lg hover:border-primary/30 transition-all cursor-pointer relative overflow-hidden">
-                                                <div className={`absolute top-0 right-0 px-2 py-1 rounded-bl-lg text-[9px] font-black uppercase tracking-wider ${isCalc ? 'bg-blue-50 text-blue-600' : isSched ? 'bg-amber-50 text-amber-600' : isQuant ? 'bg-emerald-50 text-emerald-600' : 'bg-purple-50 text-purple-600'}`}>
+                                            <div key={a.id} onClick={() => handleLoad(a)} className="archive-card group flex flex-col p-5 transition-all cursor-pointer relative overflow-hidden">
+                                                <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${isCalc ? 'bg-blue-50 text-blue-600' : isSched ? 'bg-amber-50 text-amber-600' : isQuant ? 'bg-emerald-50 text-emerald-600' : 'bg-purple-50 text-purple-600'}`}>
                                                     {isCalc ? 'Costing' : isSched ? 'Schedule' : isQuant ? 'Quantities' : 'Analysis'}
                                                 </div>
                                                 <div className="flex justify-between items-start mb-4 mt-2 gap-2">
@@ -392,11 +430,15 @@ export default function SavedArchives({ onLoad }) {
                                                     </div>
                                                     <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap mt-1 flex-shrink-0">{formattedDate}</span>
                                                 </div>
-                                                <div className="mt-auto pt-4 border-t border-slate-50 flex justify-between items-end">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{mainMetricLabel}</span>
-                                                        <span className={`text-sm font-black ${isQuant || a.type === 'cost_analysis' ? 'text-emerald-600' : 'text-slate-900'}`}>{mainMetricValue}</span>
-                                                    </div>
+                                                <div className="mt-auto pt-4 border-t border-slate-100 flex justify-between items-end gap-3">
+                                                    {isCalc ? (
+                                                        <CostingMetricStrip summary={costingSummary} />
+                                                    ) : (
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{mainMetricLabel}</span>
+                                                            <span className={`text-sm font-black ${isQuant || a.type === 'cost_analysis' ? 'text-emerald-600' : 'text-slate-900'}`}>{mainMetricValue}</span>
+                                                        </div>
+                                                    )}
                                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity relative z-20" onClick={(e) => e.stopPropagation()}>
                                                         <button
                                                             onClick={(e) => {
@@ -452,9 +494,9 @@ export default function SavedArchives({ onLoad }) {
                                         <div
                                             key={company}
                                             onClick={() => handleCompanyClick(company)}
-                                            className="relative bg-white border border-slate-200 rounded-xl p-4 hover:shadow-lg hover:border-primary/50 transition-all group flex flex-col items-center text-center gap-3 cursor-pointer"
+                                            className="company-card relative p-5 transition-all group flex flex-col items-center text-center gap-3 cursor-pointer"
                                         >
-                                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors relative">
+                                            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors relative">
                                                 <span className="material-symbols-outlined text-[24px]">business</span>
                                             </div>
                                             <div>
@@ -558,15 +600,12 @@ export default function SavedArchives({ onLoad }) {
                                     let mainMetricLabel = '';
                                     let mainMetricValue = '';
                                     let date = new Date(a.data?.updatedAt || a.created_at).toLocaleDateString();
+                                    let costingSummary = null;
 
                                     if (isCalc) {
                                         title = a.data?.recordName || a.data?.companyName || `Costing #${a.id}`;
                                         subTitle = 'Costing Engine';
-                                        mainMetricLabel = 'Bag Price';
-                                        const p = a.data?.pricing || {};
-                                        const vendorCost = (Number(p.ppRate) + Number(p.transportPerBag) + Number(p.conversionCost)) * Number(p.bagWeight);
-                                        const price = vendorCost * (1 + (Number(p.profitMargin) / 100));
-                                        mainMetricValue = price.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+                                        costingSummary = getCostingSummary(a);
                                     } else if (isSched) {
                                         const po = a.data?.poDetails || {};
                                         title = a.data?.recordName || po.customerName || 'Unknown';
@@ -618,9 +657,9 @@ export default function SavedArchives({ onLoad }) {
                                     });
 
                                     return (
-                                        <div key={a.id} onClick={() => handleLoad(a)} className="group flex flex-col bg-white border border-slate-200 rounded-xl p-5 hover:shadow-lg hover:border-primary/30 transition-all cursor-pointer relative overflow-hidden">
+                                        <div key={a.id} onClick={() => handleLoad(a)} className="archive-card group flex flex-col p-5 transition-all cursor-pointer relative overflow-hidden">
                                             {/* Type Badge */}
-                                            <div className={`absolute top-0 right-0 px-2 py-1 rounded-bl-lg text-[9px] font-black uppercase tracking-wider ${isCalc ? 'bg-blue-50 text-blue-600' : isSched ? 'bg-amber-50 text-amber-600' : isQuant ? 'bg-emerald-50 text-emerald-600' : 'bg-purple-50 text-purple-600'}`}>
+                                            <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${isCalc ? 'bg-blue-50 text-blue-600' : isSched ? 'bg-amber-50 text-amber-600' : isQuant ? 'bg-emerald-50 text-emerald-600' : 'bg-purple-50 text-purple-600'}`}>
                                                 {isCalc ? 'Costing' : isSched ? 'Schedule' : isQuant ? 'Quantities' : 'Analysis'}
                                             </div>
 
@@ -632,11 +671,15 @@ export default function SavedArchives({ onLoad }) {
                                                 <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap mt-1 flex-shrink-0">{formattedDate}</span>
                                             </div>
 
-                                            <div className="mt-auto pt-4 border-t border-slate-50 flex justify-between items-end">
-                                                <div className="flex flex-col">
-                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{mainMetricLabel}</span>
-                                                    <span className={`text-sm font-black ${isQuant || a.type === 'cost_analysis' ? 'text-emerald-600' : 'text-slate-900'}`}>{mainMetricValue}</span>
-                                                </div>
+                                            <div className="mt-auto pt-4 border-t border-slate-100 flex justify-between items-end gap-3">
+                                                {isCalc ? (
+                                                    <CostingMetricStrip summary={costingSummary} />
+                                                ) : (
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{mainMetricLabel}</span>
+                                                        <span className={`text-sm font-black ${isQuant || a.type === 'cost_analysis' ? 'text-emerald-600' : 'text-slate-900'}`}>{mainMetricValue}</span>
+                                                    </div>
+                                                )}
                                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity relative z-20" onClick={(e) => e.stopPropagation()}>
                                                     <button
                                                         onClick={(e) => {

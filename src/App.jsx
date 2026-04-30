@@ -381,7 +381,7 @@ function App() {
           window.tailwind.config = {
             theme: {
               extend: {
-                colors: { "primary": "#1152d4", "background-light": "#f8fafc", "text-main": "#0f172a", "text-muted": "#64748b" },
+                colors: { "primary": "#6b6fdc", "background-light": "#f7f6ff", "text-main": "#0f172a", "text-muted": "#64748b" },
                 fontFamily: { "display": ["Inter", "sans-serif"] },
               },
             },
@@ -408,17 +408,18 @@ function App() {
   }
 
   return (
-    <div className="bg-background-light text-text-main font-display overflow-hidden h-screen flex flex-col">
-      <div className="flex-1 flex flex-col h-full overflow-y-auto">
+    <div className="app-shell text-text-main font-display overflow-hidden h-screen p-3 md:p-6">
+      <div className="workspace-frame max-w-[1720px] mx-auto h-full flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="flex items-center justify-between px-6 py-4 border-b border-border-light bg-white/95 backdrop-blur sticky top-0 z-20">
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2 text-sm text-text-muted">
-              <span className="font-semibold text-primary">Leocalc</span>
+        <header className="app-header flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-5 px-5 md:px-8 py-5 z-20">
+          <div className="flex flex-col gap-1 min-w-0">
+            <div className="flex items-center gap-2 text-sm text-text-muted min-w-0">
+              <span className="brand-mark">L</span>
+              <span className="font-black text-primary">Leocalc</span>
               <span className="material-symbols-outlined text-[14px]">chevron_right</span>
               <span className="text-text-main font-medium capitalize">{activeTab} Dashboard</span>
             </div>
-            <h2 className="text-text-main text-xl font-bold tracking-tight">
+            <h2 className="text-text-main text-xl md:text-2xl font-black tracking-tight">
               {activeTab === 'calculator' ? 'Costing & Logistics Engine' :
                 activeTab === 'supply' ? 'Production & Supply Planning' :
                   activeTab === 'quantities' ? 'Quantities & Margin Analysis' :
@@ -426,31 +427,31 @@ function App() {
             </h2>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex p-1 bg-slate-100 rounded-lg border border-slate-200">
-              <button onClick={() => handleTabChange('calculator')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'calculator' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}>
+          <div className="flex items-center gap-3 flex-wrap 2xl:flex-nowrap">
+            <div className="nav-strip flex p-1.5 rounded-full overflow-x-auto max-w-full gap-1">
+              <button onClick={() => handleTabChange('calculator')} className={`nav-pill ${activeTab === 'calculator' ? 'is-active' : ''}`}>
                 <span className="material-symbols-outlined text-[16px]">calculate</span> Calculator
               </button>
-              <button onClick={() => handleTabChange('supply')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'supply' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}>
+              <button onClick={() => handleTabChange('supply')} className={`nav-pill ${activeTab === 'supply' ? 'is-active' : ''}`}>
                 <span className="material-symbols-outlined text-[16px]">local_shipping</span> Supply
               </button>
-              <button onClick={() => handleTabChange('quantities')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'quantities' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}>
+              <button onClick={() => handleTabChange('quantities')} className={`nav-pill ${activeTab === 'quantities' ? 'is-active' : ''}`}>
                 <span className="material-symbols-outlined text-[16px]">calculate</span> Quantities
               </button>
-              <button onClick={() => handleTabChange('cost_analysis')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'cost_analysis' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}>
+              <button onClick={() => handleTabChange('cost_analysis')} className={`nav-pill ${activeTab === 'cost_analysis' ? 'is-active' : ''}`}>
                 <span className="material-symbols-outlined text-[16px]">analytics</span> Cost Analysis
               </button>
-              <button onClick={() => handleTabChange('archives')} className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'archives' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}>
+              <button onClick={() => handleTabChange('archives')} className={`nav-pill ${activeTab === 'archives' ? 'is-active' : ''}`}>
                 <span className="material-symbols-outlined text-[16px]">folder_open</span> Archives
               </button>
             </div>
 
-            <div className="h-6 w-px bg-slate-200 mx-1"></div>
+            <div className="hidden 2xl:block h-6 w-px bg-slate-200 mx-1"></div>
 
             {activeTab !== 'archives' && (
               <button
                 onClick={editingArchiveId ? handleQuickUpdate : handleSaveConfig}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-all text-sm font-medium shadow-lg shadow-primary/20"
+                className="pressable flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white hover:bg-primary/90 transition-all text-sm font-bold shadow-lg shadow-primary/20"
               >
                 <span className="material-symbols-outlined text-[18px]">save</span>
                 <span>{editingArchiveId ? 'Update' : 'Save'} {activeTab === 'supply' ? 'Schedule' : 'Config'}</span>
@@ -459,7 +460,7 @@ function App() {
 
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all text-sm font-medium"
+              className="pressable flex items-center gap-2 px-3 py-2 rounded-xl text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all text-sm font-medium"
               title="Sign Out"
             >
               <span className="material-symbols-outlined text-[20px]">logout</span>
@@ -468,23 +469,28 @@ function App() {
         </header>
 
         {/* Content Body with Rounded Box Style */}
-        <div className="p-6 flex flex-col gap-6 max-w-[1600px] mx-auto w-full flex-1 mb-10">
-          <div className="bg-white border border-border-light rounded-2xl shadow-sm flex flex-col flex-1 p-6 md:p-8 animate-fade-in overflow-hidden">
+        <div className="content-scroll p-4 md:p-8 flex flex-col gap-6 w-full flex-1 overflow-y-auto">
+          <div className="flex flex-col flex-1 animate-fade-in">
             {activeTab === 'calculator' ? (
               <>
                 {/* Page Heading & Actions (Standardized) */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-2">
-                  <div className="flex flex-col gap-2">
-                    <h1 className="text-slate-900 text-3xl md:text-4xl font-black leading-tight tracking-tight">Costing Engine</h1>
-                    <p className="text-slate-500 text-base font-normal">Unit economics, logistics optimization & margin analysis</p>
+                  <div className="module-hero flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+                    <div className="flex flex-col gap-2">
+                      <h1 className="text-slate-950 text-3xl md:text-5xl font-black leading-tight tracking-tight">Costing Engine</h1>
+                      <p className="text-slate-500 text-base font-medium">Unit economics, logistics optimization & margin analysis</p>
+                    </div>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mt-4">
+                <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
                   <PricingCalculator inputs={pricingInputs} onChange={handlePricingChange} />
                 </div>
                 <div className="flex flex-col gap-4 mt-8">
-                  <h3 className="text-text-main text-lg font-bold px-1">Freight & Loading Optimization</h3>
+                  <div className="flex items-center justify-between px-1">
+                    <div>
+                      <h3 className="text-text-main text-xl font-black">Freight & Loading Optimization</h3>
+                      <p className="text-sm text-slate-500 font-medium">Use mixed dimension units while calculating against the master unit.</p>
+                    </div>
+                  </div>
                   <FreightCalculator inputs={freightInputs} onChange={handleFreightChange} bagWeight={pricingInputs.bagWeight} />
                 </div>
               </>
