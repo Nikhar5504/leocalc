@@ -31,13 +31,13 @@ const getCostingSummary = (archive) => {
 const CostingMetricStrip = ({ summary }) => (
     <div className="costing-metric-row">
         <div className="text-left">
-            <span className="costing-metric-value text-emerald-600">{formatCurrency(summary.vendorPrice)}</span>
+            <span className="costing-metric-value text-purple-600">{formatCurrency(summary.customerPrice)}</span>
         </div>
         <div className="text-center">
             <span className="costing-metric-value text-orange-500">{summary.margin.toFixed(2)}%</span>
         </div>
         <div className="text-right">
-            <span className="costing-metric-value text-purple-600">{formatCurrency(summary.customerPrice)}</span>
+            <span className="costing-metric-value text-emerald-600">{formatCurrency(summary.vendorPrice)}</span>
         </div>
     </div>
 );

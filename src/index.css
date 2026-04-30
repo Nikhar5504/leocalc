@@ -174,9 +174,9 @@ body {
 .costing-metric-row {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: center;
-  gap: 0.8rem;
+  gap: 1rem;
   width: 100%;
 }
 
